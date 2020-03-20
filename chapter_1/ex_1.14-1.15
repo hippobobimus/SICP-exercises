@@ -1,0 +1,143 @@
+*** Exercise 1.14:
+
+(count-change 11)
+|
+(cc 11 5)__
+|          \
+(cc 11 4)   (cc -39 5)
+|       \___
+|           \
+(cc 11 3)   (cc -14 4)
+|       \_______________________________________________________
+|                                                               \
+(cc 11 2)                                                      (cc 1 3)
+|       \_________________________                              |     \__
+|                                 \                             |        \
+(cc 11 1)                        (cc 6 2)                      (cc 1 2) (cc -9 3)
+|       \___                      |     \__                     |     \__
+|           \                     |        \                    |        \
+(cc 11 0)   (cc 10 1)            (cc 6 1) (cc 1 2)             (cc 1 1) (cc -4 2)
+         __/ |                 __/ |       |     \__            |     \__
+        /    |                /    |       |        \           |        \
+(cc 10 0)   (cc 9 1)  (cc 6 0)   (cc 5 1) (cc 1 1) (cc -4 2)   (cc 1 0) (cc 0 1)
+         __/ |                 __/ |       |     \__
+        /    |                /    |       |        \
+(cc 9 0)    (cc 8 1)  (cc 5 0)   (cc 4 1) (cc 1 0) (cc 0 1)
+         __/ |                 __/ |
+        /    |                /    |
+(cc 8 0)    (cc 7 1)  (cc 4 0)   (cc 3 1)
+         __/ |                 __/ |
+        /    |                /    |
+(cc 7 0)    (cc 6 1)  (cc 3 0)   (cc 2 1)
+         __/ |                 __/ |
+        /    |                /    |
+(cc 6 0)    (cc 5 1)  (cc 2 0)   (cc 1 1)
+         __/ |                 __/ |
+        /    |                /    |
+(cc 5 0)    (cc 4 1)  (cc 1 0)   (cc 0 1)
+         __/ |
+        /    |
+(cc 4 0)    (cc 3 1)
+         __/ |
+        /    |
+(cc 3 0)    (cc 2 1)
+         __/ |
+        /    |
+(cc 2 0)    (cc 1 1)
+         __/ |
+        /    |
+(cc 1 0)    (cc 0 1)
+
+Work out orders of growth for space and number of steps as the amount to be changed increases.
+
+STEPS/TIME
+
+Take (cc n 1)
+
+(cc n   1)_____
+|              \
+|               (cc n   0)
+(cc n-1 1)_____
+|              \
+|               (cc n-1 0)
+...
+|                  ...
+|
+(cc 1   1)_____
+|              \
+|               (cc 1   0)
+(cc 0   1)
+
+==> There are 2n steps
+
+For (cc n 1): steps O(n)
+
+
+Consider (cc n 2)
+
+(cc n    2)_____
+|               \
+|                (cc n    1)
+(cc n-5  2)_____
+|               \
+|                (cc n-5  1)
+(cc n-10 2)_____
+|               \
+|                (cc n-10 1)
+...
+
+==> There are roughly n/5 (cc x 2) steps and each (cc x 2) step spawns a (cc x 1) step.
+
+==> For (cc n 2): steps are proportional to (n/5).2n ==> steps O(n^2)
+
+
+Likewise for (cc n 3) there are roughly n/10 (cc x 3) steps which each spawn a (cc x 2) step.
+
+==> (cc n 3): steps O(n^3)
+
+==> For a count-change process with 5 denominations of coin, steps O(n^5)
+
+
+SPACE
+
+The maximum depth of the tree can be found by following the branch where you are deducting just 1
+each time.
+
+==> Space O(n)
+
+***Exercise 1.15:
+
+Assume sin x = x when x < 0.1
+
+Use sin x = 3.sin(x/3) - 4.sin^3(x/3)
+to reduce the size of the argument of sin
+
+Hence;
+
+(define (cube x) (* x x x))
+
+(define (p x) (- (* 3 x) (* 4 (cube x))))
+
+(define (sine angle)
+    (if (not (> (abs angle) 0.1))
+        angle
+        (p (sine (/ angle 3.0)))))
+
+(a) How many times is p applied when evaluating (sine 12.5)?
+
+12.5 must be divided by 3.0 5 times before it is less than 0.1.
+==> p is applied 5 times.
+
+(b) What is the order of growth in space and number of steps when evaluating (sine a)?
+
+let x = no. of steps
+
+a/(3^n) ~ 0.1
+
+3^n ~ 10.a
+
+n ~ log(10a).log(3)
+
+==> n proportional to log(a)
+
+==> For steps and space, O(log(a)).

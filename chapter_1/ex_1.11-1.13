@@ -1,0 +1,86 @@
+*** Exercise 1.11:
+
+f(n) = n if n < 3
+f(n) = f(n - 1) + 2f(n - 2) + 3f(n - 3) if n >= 3
+
+
+Tree recursive process:
+
+(define (func n)
+    (cond ((< n 3) n))
+          (else (+ (func (- n 1))
+                   (* 2 (func (- n 2)))
+                   (* 3 (func (- n 3))))))
+
+Iterative process:
+
+f(0) = 0 --> c
+f(1) = 1 --> b
+f(2) = 2 --> a
+
+(define (func-iter a b c counter)
+    (if (< counter 3)
+        a
+        (func-iter (+ a (* 2 b) (* 3 c)) a b (- counter 1))))
+          
+(define (func n)
+    (if (< n 3)
+        n
+        (func-iter 2 1 0 n)))
+
+*** Exercise 1.12:
+
+Element at (row, column) = (row - 1, column - 1) + (row - 1, column)
+
+(define (pascal-element n)
+
+    (define (func row col)
+        (cond ((or (< row 1) (< col 1) (> col row)) 0)
+              ((= row 1) 1)
+              (else (+ (func (- row 1) (- col 1))
+                       (func (- row 1) col)))))
+        
+    (define (get-row-col counter row-counter col-counter)
+        (if (<= n counter)
+            (func row-counter col-counter)
+            (get-row-col (+ counter row-counter 1) (+ row-counter 1) (- n counter))))
+
+    (get-row-col 1 1 1))
+
+*** Exercise 1.13:
+
+Prove: Fib(n) = (phi^n - psi^n) / sqrt(5)
+
+phi = (1 + sqrt(5)) / 2
+psi = (1 - sqrt(5)) / 2
+
+
+Assume Fib(n) = (phi^n - psi^n) / sqrt(5)
+
+Therefore we need to show:
+Fib(n) = Fib(n - 1) + Fib(n - 2) when n > 1
+
+Fib(n - 1) + Fib(n - 2)
+= (phi^(n-1) - psi^(n-1)) / sqrt(5) + (phi^(n-2) - psi^(n-2)) / sqrt(5)
+= (phi^(n-1) - psi^(n-1) + phi^(n-2) - psi^(n-2)) / sqrt(5)
+= (phi^n / phi - psi^n / psi + phi^n / phi^2 - psi^n / psi^2) / sqrt(5)
+= (2.phi^n / (1+sqrt(5)) - 2.psi^n / (1-sqrt(5)) + 2.phi^n / (1+sqrt(5))^2 - 2.psi^n / (1-sqrt(5))^2) / sqrt(5)
+= (phi^n/sqrt(5)).(2/(1+sqrt(5)) + 4/(1+sqrt(5))^2) - (psi^n/sqrt(5)).(2/(1-sqrt(5)) + 4/(1-sqrt(5))^2)
+= (phi^n/sqrt(5)).(2/(1+sqrt(5)) + 4/(6+2.sqrt(5))) - (psi^n/sqrt(5)).(2/(1-sqrt(5)) + 4/(6-2.sqrt(5)))
+= (phi^n/sqrt(5)).(2.(6+2.sqrt(5)) + 4.(1+sqrt(5)))/(1+sqrt(5)).(6+2.sqrt(5)) - (psi^n/sqrt(5)).(2.(6-2.sqrt(5)) + 4.(1-sqrt(5)))/(1-sqrt(5)).(6-2.sqrt(5))
+= (phi^n/sqrt(5)).(16+8.sqrt(5))/(16+8.sqrt(5)) - (psi^n/sqrt(5)).(16-8.sqrt(5))/(16-8.sqrt(5))
+= (phi^n - psi^n) / sqrt(5)
+= Fib(n)
+
+Now show Fib(n) is the closest integer to phi^n / sqrt(5)
+
+0 < (1 - sqrt(5)) / 2 < 1
+0 < psi^n < 1
+0 < psi^n / sqrt(5) < 1/sqrt(5) < 1
+Fib(n) < Fib(n) + (psi^n)/sqrt(5) < Fib(n) + 1
+
+Fib(n) = (phi^n - psi^n) / sqrt(5)
+(psi^n)/sqrt(5) = (phi^n)/sqrt(5) - Fib(n)
+
+Fib(n) < (phi^n)/sqrt(5) < Fib(n) + 1
+Q.E.D.

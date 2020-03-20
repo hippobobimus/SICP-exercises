@@ -1,0 +1,81 @@
+*** Exercise 1.6:
+
+(define (new-if predicate then-clause else-clause)
+    (cond (predicate then-clause)
+          (else else-clause)))
+
+(define (sqrt-iter guess x)
+    (new-if (good-enough? guess x)
+            guess
+            (sqrt-iter (improve guess x)
+                       x)))
+
+Because sqrt-iter is a recursive process and the interpreter uses
+applicative-order evaluation; evaluating sqrt-iter results in
+infinite recursion (repeatedly evaluating sqrt-iter).
+
+The built-in 'if' special form handles the evaluation without full
+applicative-order evaluation in such a way as to avoid this infinite
+loop.
+
+
+*** Exercise 1.7:
+
+(define (good-enough? guess x)
+    (< (abs (- (square guess) x)) 0.001))
+
+This tests whether the approximation to the square root of x is close
+enough.
+
+This fails for very small numbers because the tolerance can become
+very large in comparison to the value of x.
+
+e.g.
+
+(good-enough? 0.0003 0.0000000009)
+
+returns true despite the guess (0.0003) being an order of magnitude
+greater than the actual value of the square root of 0.0000000009;
+0.00003.
+
+Moreover since computers perform arithmetic operations with limited
+precision, this definition of good-enough? will also fail for very
+large numbers. The computer may not be able to calculate an improved
+guess (as per the below) to sufficient precision that it is within
+0.001 of x. Therefore the procedure continues to call 'improve' ad
+infinitum.
+
+(define (improve guess x)
+    (average guess (/ x guess)))
+
+Alternatively, watch how guess changes from one iteration to the next
+and stop when the change is small enough.
+
+(define (sqrt-iter guess x)
+    (if (good-enough? guess x)
+        guess
+        (sqrt-iter (improve guess x) 
+                   x)))
+
+(define (good-enough? guess x)
+    (< (abs (- guess (improve guess x))) (* guess 0.0001)))
+
+
+*** Exercise 1.8:
+
+(define (improve guess x)
+        (/ (+ (/ x
+                 (square guess))
+              (* 2
+                 guess))
+           3))
+
+(define (good-enough? guess x)
+    (< (abs (- guess (improve guess x))) (* guess 0.0001)))
+
+(define (cbrt-iter guess x)
+    (if (good-enough? guess x)
+        guess
+        (cbrt-iter (improve guess x) x)))
+
+(define (cbrt x) (cbrt-iter 1.0 x))

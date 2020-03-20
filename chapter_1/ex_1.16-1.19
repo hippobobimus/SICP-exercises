@@ -1,0 +1,121 @@
+*** Exercise 1.16:
+
+(define (even? n)
+    (= (remainder n 2) 0))
+
+(define (new-expt b n)
+    (fast-expt-iter b n 1))
+
+(define (fast-expt-iter b counter a)
+    (cond ((= counter 0) 1)
+          ((= counter 1) (* b a))
+          ((even? counter) (fast-expt-iter (square b) (/ counter 2) a))
+          (else (fast-expt-iter b (- counter 1) (* b a)))))
+
+*** Exercise 1.17:
+
+(define (* a b)
+    (if (= b 0)
+        0
+        (+ a (* a (- b 1)))))
+
+Now devise a fast-mult algorithm with a logarithmic number of steps.
+
+(define (halve x)
+    (/ x 2))
+
+(define (double x)
+    (+ x x))
+
+(define (fast-mult a b)
+    (cond ((or (= a 0) (= b 0)) 0)
+          ((even? b) (double (fast-mult a (halve b))))
+          ((< b 0) (+ (- a) (fast-mult a (+ b 1))))
+          (else (+ a (fast-mult a (- b 1))))))
+
+*** Exercise 1.18:
+
+For even b:
+
+a.b = (2a).(b/2)
+
+==> a.b + r = (2a).(b/2) + r
+
+For odd b:
+
+(a + 1)(b - 1) = a.b - a + b - 1
+
+a.b = (a + 1)(b - 1) + a - b + 1
+
+==> a.b + r = (a + 1)(b - 1) + r + a - b + 1
+
+Thereby a.b + r is constant.
+
+even:       odd:
+a --> 2a    a --> a + 1
+b --> b/2   b --> b - 1
+r --> r     r --> r + a - b + 1
+
+Stop when b = 1 or -1 and return a + r or (-a) + r.
+
+(define (halve x)
+    (/ x 2))
+
+(define (double x)
+    (+ x x))
+
+(define (fast-mult x y)
+    (define (fast-mult-iter a b r)
+        (cond ((or (= a 0) (= b 0)) 0)
+              ((= b 1) (+ a r))
+              ((= b (- 1)) (+ (- a) r))
+              ((even? b) (fast-mult-iter (double a) (halve b) r))
+              (else (fast-mult-iter (+ a 1) (- b 1) (+ r a (- b) 1)))))
+    (fast-mult-iter x y 0))
+
+*** Exercise 1.19:
+
+Transformation T:
+
+a <-- a + b
+b <-- a
+
+is a special case of Tpq when p=0, q=1:
+
+a <-- bq + aq + ap
+b <-- bp + aq
+
+Show that applying Tpq twice can be described as a transformation Tp'q' of the same form:
+
+a <-- (bp + aq)q + (bq + aq + ap)q + (bq + aq + ap)p
+      
+    = 2aq^2 + ap^2 + bq^2 + 2apq + 2bpq
+
+    = b(q^2 + 2pq) + a(q^2 + 2pq) + a(p^2 + q^2)
+
+b <-- (bp + aq)p + (bq + aq + ap)q
+
+    = bp^2 + 2apq + bq^2 + aq^2
+
+    = b(p^2 + q^2) + a(q^2 + 2pq)
+
+==> p' = p^2 + q^2
+    q' = q^2 + 2pq
+
+
+(define (fib n)
+  (fib-iter 1 0 0 1 n))
+
+(define (fib-iter a b p q count)
+  (cond ((= count 0) b)
+        ((even? count)
+         (fib-iter a
+                   b
+                   (+ (square p) (square q))
+                   (+ (square q) (* 2 p q))
+                   (/ count 2)))
+        (else (fib-iter (+ (* b q) (* a q) (* a p))
+                        (+ (* b p) (* a q))
+                        p
+                        q
+                        (- count 1)))))

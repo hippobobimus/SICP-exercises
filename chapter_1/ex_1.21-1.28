@@ -1,0 +1,214 @@
+*** Exercise 1.21:
+
+Smallest divisors;
+
+199 --> 199
+1999 --> 1999
+19999 --> 7
+
+*** Exercise 1.22:
+
+
+(define (smallest-divisor n)
+  (find-divisor n 2))
+
+(define (find-divisor n test-divisor)
+  (cond ((> (square test-divisor) n) n)
+        ((divides? test-divisor n) test-divisor)
+        (else (find-divisor n (+ test-divisor 1)))))
+
+(define (divides? a b)
+  (= (remainder b a) 0))
+
+(define (prime? n)
+  (= n (smallest-divisor n)))
+
+
+
+(define (timed-prime-test n)
+  (newline)
+  (display n)
+  (start-prime-test n (runtime)))
+
+(define (start-prime-test n start-time)
+  (if (prime? n)
+      (report-prime (- (runtime) start-time))
+      #f))
+
+(define (report-prime elapsed-time)
+  (display " *** ")
+  (display elapsed-time)
+  #t)
+
+
+
+(define (search-for-primes start)
+  (if (even? start)
+      (search-for-primes-iter (+ start 1) 3 0)
+      (search-for-primes-iter start 3 0)))
+
+(define (search-for-primes-iter n no-of-primes counter)
+  (cond ((= counter no-of-primes)
+         (begin (newline)
+                (display "SEARCH COMPLETE")))
+        ((timed-prime-test n)
+         (search-for-primes-iter (+ n 2) no-of-primes (+ counter 1)))
+        ((not (timed-prime-test n))
+         (search-for-primes-iter (+ n 2) no-of-primes counter))))
+
+(search-for-primes 1000000000)
+
+~ 0.03-0.05 
+sqrt(n) ~ 31622
+
+(search-for-primes 10000000000)
+
+~ 0.08-0.09
+sqrt(n) = 100,000
+
+(search-for-primes 100000000000)
+
+~ 0.24-0.27
+sqrt(n) ~ 316,227
+
+==> time taken grows by sqrt(10) ~ 3.2 as n is increased by a factor of 10.
+==> as expected since O(sqrt(n))
+
+
+*** Exercise 1.23:
+
+Modify smallest divisor to:
+
+(define (smallest-divisor n)
+  (find-divisor n 2))
+
+(define (find-divisor n test-divisor)
+  (cond ((> (square test-divisor) n) n)
+        ((divides? test-divisor n) test-divisor)
+        ((= test-divisor 2) (find-divisor n 3))
+        (else (find-divisor n (+ test-divisor 2)))))
+
+(define (divides? a b)
+  (= (remainder b a) 0))
+
+(define (prime? n)
+  (= n (smallest-divisor n)))
+
+1000000000
+~ 0.02
+
+10000000000
+~ 0.05
+
+100000000000
+~ 0.15
+
+testing half as many divisors, however there is an additional cond clause
+==> time reduced by a little less than half.
+
+*** Exercise 1.24:
+
+Now use the Fermat method of finding primes.
+
+Since O(log(n)) and 2.log(n) = log(n^2)
+
+==> To double time taken, you need to square n.
+
+1000000000000000000000 (21 0's)
+~ 0.02-0.03
+
+1000000000000000000000000000000000000000000 (42 0's)
+~ 0.05
+
+1000000000000000000000000000000000000000000000 ... (84 0's)
+~ 0.1
+
+
+*** Exercise 1.25:
+
+(define (expmod base exp m)
+  (remainder (fast-expt base exp) m))
+
+Using this instead of the previous expmod procedure would be inefficient.
+
+The version of expmod used previously calculates the remainder at each step, thereby keeping the 
+tracked values always smaller than m.
+
+Simply using fast-exp would result in multiple squaring operations and very large tracked numbers
+which would be computatiionally expensive.
+
+
+*** Exercise 1.26:
+
+By explicitly multiplying two instances of expmod the procedure is having to call the expmod procedure 
+twice each time the even exponent condition is met.
+
+Since it is a recursive process, expmod is called twice by the initial step, then those two expmods each
+call expmod twice...
+
+==> Thereby for n steps you are calling expmod 2^n times.
+
+Since O(logn) for the original procedure and the number of steps has been inflated by 2^n;
+
+steps prop. to log(2^n) = n.log2 ~ n
+
+==> O(n)
+
+
+*** Exercise 1.27:
+
+(define (expmod base expn m)
+  (cond ((= expn 0) 1)
+        ((even? expn)
+         (remainder (square (expmod base (/ expn 2) m))
+                    m))
+        (else
+          (remainder (* base (expmod base (- expn 1) m))
+                     m))))
+
+(define (fermat-test a n)
+  (= (expmod a n n) a))
+
+(define (carm-test-iter n counter)
+  (cond ((= counter n)
+         #t)
+        ((fermat-test counter n)
+         (carm-test-iter n (+ counter 1)))
+        (else
+          #f)))
+
+(define (carm-test n)
+  (carm-test-iter n 1))
+
+
+*** Exercise 1.28:
+
+(define (non-trivial-sqrt? a n)
+  (if (or (= a (- n 1)) (= a 1))
+      #f
+      (= (remainder (square a) n) 1)))
+
+(define (expmod a n m)
+  (cond ((= n 0) 1)
+        ((even? n)
+         (let ((x (expmod a (/ n 2) m)))
+             (if (non-trivial-sqrt? x m)
+                 0
+                 (remainder (square x) m))))
+        (else
+          (remainder (* a (expmod a (- n 1) m))
+                     m))))
+
+(define (miller-rabin-test n)
+  (define (try-it a)
+    (= (expmod a (- n 1) n) 1))
+  (try-it (+ 1 (random (- n 1)))))
+
+(define (mr-prime? n times)
+  (cond ((= times 0) #t)
+        ((miller-rabin-test n) (mr-prime? n (- times 1)))
+        (else #f)))
+
+(define (prime? n)
+  (mr-prime? n 100))
+

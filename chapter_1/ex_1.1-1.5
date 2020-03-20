@@ -1,0 +1,98 @@
+*** Exercise 1.1:
+
+10                              10
+
+(+ 5 3 4)                       12
+
+(- 9 1)                         8
+
+(/ 6 2)                         3
+
+(+ (* 2 4) (- 4 6))             6
+
+(define a 3)                    a
+
+(define b (+ a 1))              b
+
+(+ a b (* a b))                 19
+
+(= a b)                         #f
+
+(if (and (> b a) (< b (* a b)))
+    b
+    a)                          4
+
+(cond ((= a 4) 6)
+      ((= b 4) (+ 6 7 a))
+      (else 25))                16
+
+(+ 2 (if (> b a) b a))          5
+
+(* (cond ((> a b) a)
+         ((< a b) b)
+         (else -1))
+   (+ a 1))                     16
+
+*** Exercise 1.2:
+
+(/ (+ 5 4 
+        (- 2 
+           (- 3 
+              (+ 6 
+                 (/ 4 5)))))
+   (* 3 
+      (- 6 2)
+      (- 2 7)))
+
+*** Exercise 1.3:
+
+(define (sum-of-sqrs x y)
+    (+ (* x x)
+       (* y y)))
+
+
+(define (sum-largest-sqrs a b c)
+    (cond ((and (>= a c)
+                (>= b c)) (sum-of-sqrs a b))
+          ((and (>= b a)
+                (>= c a)) (sum-of-sqrs b c))
+          (else (sum-of-sqrs a c))))
+
+*** Exercise 1.4:
+
+(define (a-plus-abs-b a b)
+    ((if (> b 0) + -) a b))
+
+If the value of b is greater than 0, then the '+' operator if applied to a and b. Otherwise the '-' operator is applied.
+Thus the absolute value of b is added to a in both cases.
+
+*** Exercise 1.5:
+
+(define (p) (p))
+
+(define (test x y)
+    (if (= x 0)
+        0
+        y))
+
+Evaluate:
+(test 0 (p))
+
+What happens if the interpreter uses applicative-order or normal-order evaluation?
+
+Normal Order:               Applicative Order:
+
+(test 0 (p))                (test 0 (p))
+
+(if (= 0 0)                 (test 0 (p))
+    0
+    (p))                    (test 0 (p))
+
+(if (#t)                    (p) keeps evaluating to (p) !!!
+    0
+    (p))
+
+0
+
+evaluation of (p) is
+never required.
