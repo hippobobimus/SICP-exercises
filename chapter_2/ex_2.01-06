@@ -1,0 +1,124 @@
+*** Exercise 2.1:
+
+(define (make-rat n d)
+    (let ((g (gcd n d)))
+        (cons (/ n g) (/ d g))))
+
+Add handling of positive and negative arguments:
+
+(define (make-rat n d)
+  (let ((g ((if (< d 0) - +) (abs (gcd n d)))))
+    (cons (/ n g) (/ d g))))
+
+
+*** Exercise 2.2:
+
+(define (midpoint-segment s)
+  (let ((a (start-segment s))
+        (b (end-segment s)))
+    (let ((a-x (x-point a))
+          (a-y (y-point a))
+          (b-x (x-point b))
+          (b-y (y-point b)))
+      (make-point (/ (+ b-x a-x) 2) (/ (+ b-y a-y) 2)))))
+
+
+*** Exercise 2.3:
+
+
+
+*** Exercise 2.4:
+
+(define (cons x y)
+  (lambda (m) (m x y)))
+
+(define (car z)
+  (z (lambda (p q) p)))
+
+Therefore:
+
+(car (cons x y))
+
+(car (lambda (m) (m x y)))
+
+((lambda (m) (m x y)) (lambda (p q) p))
+
+((lambda (p q) p) x y)
+
+x
+
+Definition of cdr:
+
+(define (cdr z)
+  (z (lambda (p q) q)))
+
+
+*** Exercise 2.5:
+
+;; Logarithm with specified base
+(define (log b x)
+  (/ (log x)
+     (log b)))
+
+;; Non-negative integer pairs
+(define (cons a b)
+  (* (expt 2 a)
+     (expt 3 b)))
+
+(define (inc x)
+  (+ x 1))
+
+(define (find-0-remainder-divisions divisor z)
+  (define (divides? n)
+    (= (remainder n divisor) 0))
+  (define (iter result z)
+    (if (divides? z)
+      (iter (inc result) (/ z divisor))
+      result))
+  (iter 0 z))
+
+(define (car z)
+  (find-0-remainder-divisions 2 z))
+
+(define (cdr z)
+  (find-0-remainder-divisions 3 z))
+
+
+*** Exercise 2.6:
+
+(define zero (lambda (f) (lambda (x) x)))
+
+(define (add-1 n)
+  (lambda (f) (lambda (x) (f ((n f) x)))))
+
+Therefore 'one' is:
+
+(add-1 zero)
+
+(lambda (f) (lambda (x) (f ((zero f) x))))
+
+(lambda (f) (lambda (x) (f (((lambda (f) (lambda (x) x)) f) x))))
+
+(lambda (f) (lambda (x) (f ((lambda (x) x) x))))
+
+(lambda (f) (lambda (x) (f x)))
+
+=>
+
+(define one (lambda (f) (lambda (x) (f x))))
+
+Therefore 'two' is:
+
+(add-1 one)
+
+(lambda (f) (lambda (x) (f ((one f) x))))
+
+(lambda (f) (lambda (x) (f (((lambda (f) (lambda (x) (f x))) f) x))))
+
+(lambda (f) (lambda (x) (f ((lambda (x) (f x)) x))))
+
+(lambda (f) (lambda (x) (f (f x))))
+
+=>
+
+(define two (lambda (f) (lambda (x) (f (f x)))))

@@ -1,0 +1,195 @@
+*** Exercise 2.7:
+
+;; Selectors
+(define upper-bound cdr)
+
+(define lower-bound car)
+
+
+*** Exercise 2.8:
+
+(define (sub-interval x y)
+  (add-interval x
+                (make-interval (- upper-bound y)
+                               (- lower-bound y))))
+
+
+*** Exercise 2.9:
+
+width(x) = 1/2 * (x-up - x-low)
+
+If z = x + y =>
+
+z-up = x-up + y-up
+z-low = x-low + y-low
+
+Therefore:
+
+width(z) = 1/2 * ((x-up + y-up) - (x-low + y-low))
+         = 1/2 * (x-up - x-low) + 1/2 * (y-up - y-low)
+         = width(x) + width(y)
+
+Similarly for subtraction:
+
+If z = x - y, then:
+
+z-up = x-up - y-low
+z-low = x-low - y-up
+
+width(z) = 1/2 * ((x-up - y-low) - (x-low - y-up))
+         = 1/2 * (x-up - x-low) + 1/2 * (y-up - y-low)
+         = width(x) + width(y)
+
+This does not follow for multiplication or division however:
+
+e.g.
+
+x = [1,9], y = [3,5]
+
+width(x) = 4
+width(y) = 1
+
+z = x * y
+  = [3,45]
+
+width(z) = 21
+
+Try another pair with the same widths:
+
+x = [0,8], y = [10,12]
+
+width(x) = 4
+width(y) = 1
+
+z = x * y
+  = [0,96]
+
+width(z) = 48
+
+Which is a different resultant width to the first example, therefore the width of the product can't be solely
+a function of the widths of the two terms multiplied together.
+
+
+*** Exercise 2.10:
+
+Original definition:
+
+(define (div-interval x y)
+  (mul-interval x
+                (make-interval (/ 1.0 (upper-bound y))
+                               (/ 1.0 (lower-bound y)))))
+
+Avoid division by an interval that spans zero:
+
+(define (div-interval x y)
+  (if (<= (* (upper-bound y) (lower-bound y)) 0)
+      (print "error: divisor interval spans zero")
+      (mul-interval x
+                    (make-interval (/ 1.0 (upper-bound y))
+                                   (/ 1.0 (lower-bound y))))))
+
+
+*** Exercise 2.11:
+
+(define (mul-interval x y)
+  (let ((lbx (lower-bound x))
+        (ubx (upper-bound x))
+        (lby (lower-bound y))
+        (uby (upper-bound y)))
+    (cond ((and (>= lbx 0) (>= lby 0))                      ;; + +
+           (make-interval (* lbx lby)
+                          (* ubx uby)))
+          ((and (<= ubx 0) (<= uby 0))                      ;; - -
+           (make-interval (* ubx uby)
+                          (* lbx lby)))
+          ((and (< lbx 0) (> ubx 0) (< lby 0) (> uby 0))    ;; 0 0
+           (make-interval (min (* lbx uby) (* lby ubx))
+                          (max (* ubx uby) (* lbx lby))))
+          ((and (>= lbx 0) (<= uby 0))                      ;; + -
+           (make-interval (* ubx lby)
+                          (* lbx uby)))
+          ((and (<= ubx 0) (>= lby 0))                      ;; - +
+           (make-interval (* lbx uby)
+                          (* ubx lby)))
+          ((and (< lbx 0) (> ubx 0) (>= lby 0))             ;; 0 +
+           (make-interval (* lbx uby)
+                          (* ubx uby)))
+          ((and (>= lbx 0) (< lby 0) (> uby 0))             ;; + 0
+           (make-interval (* ubx lby)
+                          (* ubx uby)))
+          ((and (< lbx 0) (> ubx 0) (<= uby 0))             ;; 0 -
+           (make-interval (* ubx lby)
+                          (* lbx lby)))
+          ((and (<= ubx 0) (< lby 0) (> uby 0))             ;; - 0
+           (make-interval (* lbx uby)
+                          (* lbx lby))))))
+
+
+*** Exercise 2.12:
+
+;; Percent between 0 and 1.0
+;; Constructor
+(define (make-center-percent c p)
+  (make-interval (* c (- 1.0 p))
+                 (* c (+ 1.0 p))))
+
+;; Selectors
+(define (center i)
+  (/ (+ (lower-bound i) (upper-bound i))
+     2))
+
+(define (percent i)
+  (/ (/ (- (upper-bound i) (lower-bound i))
+        2)
+     (center i)))
+
+
+*** Exercise 2.13:
+
+Let x and y be intervals with centres Cx and Cy, percentage tolerances Px Py.
+
+=> 
+
+x = [Cx.(1 - Px), Cx.(1 + Px)]
+y = [Cy.(1 - Py), Cy.(1 + Py)]
+
+Assuming all bounds of x and y are positive =>
+
+x.y = [Cx.Cy.(1 - Px).(1 - Py), Cx.Cy.(1 + Px).(1 + Py)]
+    = [Cx.Cy.(1 - Px - Py + Px.Py), Cx.Cy.(1 + Px + Py + Px.Py)]
+
+For small Px, Py; Px.Py can be approximated as 0.
+
+=>
+
+x.y = [Cx.Cy.(1 - (Px + Py)), Cx.Cy.(1 + (Px + Py))]
+
+=>
+
+Pxy = Px + Py for small Px, Py.
+
+
+*** Exercise 2.14:
+
+Whenever arithmetic is applied to a pair of intervals the error value is affected.
+
+For example, we saw previously that for small errors the error of the product of two intervals is 
+approximately the sum of the errors of the two intervals.
+
+If you have two different procedures for the same function, they can produce different results even if they 
+are algebraically identical depending on how many times interval arithmetic is applied to the same intervals.
+
+Moreover, dividing an interval by itself should yield the identity value.  However, this is demonstrably not the case.
+
+
+*** Exercise 2.15:
+
+Eva is right to say that tighter error bounds will be produced if a formula is written in a form such that no variable
+representing an uncertain number is repeated for all the reasons given in the previous answer.
+
+
+*** Exercise 2.16:
+
+There are many algebraic laws that do not hold up under interval arithmetic, so a way to reduce any procedures into a
+form where this wasn't an issue would be needed.  I am unsure whether this is an insurmountable task, but it is
+certainly far from trivial.

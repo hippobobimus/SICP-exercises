@@ -1,0 +1,50 @@
+;; Logarithm with specified base
+(define (log b x)
+  (/ (log x)
+     (log b)))
+
+;; Non-negative integer pairs
+(define (cons a b)
+  (* (expt 2 a)
+     (expt 3 b)))
+
+(define (inc x)
+  (+ x 1))
+
+(define (find-0-remainder-divisions divisor z)
+  (define (divides? n)
+    (= (remainder n divisor) 0))
+  (define (iter result z)
+    (if (divides? z)
+      (iter (inc result) (/ z divisor))
+      result))
+  (iter 0 z))
+
+(define (car z)
+  (find-0-remainder-divisions 2 z))
+
+(define (cdr z)
+  (find-0-remainder-divisions 3 z))
+
+;; Test
+(let ((pair-1 (cons 5 9))
+      (pair-2 (cons 0 0))
+      (pair-3 (cons 1 0)))
+  (newline)
+  (display "5:")
+  (display (car pair-1))
+  (newline)
+  (display "9:")
+  (display (cdr pair-1))
+  (newline)
+  (display "0:")
+  (display (car pair-2))
+  (newline)
+  (display "0:")
+  (display (cdr pair-2))
+  (newline)
+  (display "1:")
+  (display (car pair-3))
+  (newline)
+  (display "0:")
+  (display (cdr pair-3)))

@@ -1,0 +1,60 @@
+*** Exercise 1.40:
+
+(define (cubic a b c)
+  (lambda (x)
+    (+ (* x x x)
+       (* a (square x))
+       (* b x)
+       c)))
+
+
+*** Exercise 1.41:
+
+(define (double f)
+  (lambda (x)
+    (f (f x))))
+
+(((double (double double)) inc) 5)
+(((double (lambda (x) (double (double x)))) inc) 5)
+(((lambda (x) (double (double (double (double x))))) inc) 5)
+((double (double (double (double inc)))) 5)
+((double (double (double (lambda (x) (inc (inc x)))))) 5)
+((double (double (lambda (x) (inc (inc (inc (inc x))))))) 5)
+((double (lambda (x) (inc (inc (inc (inc (inc (inc (inc (inc x)))))))))) 5)
+((lambda (x) (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc x))))))))))))))))) 5)
+((inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc (inc 5)))))))))))))))))
+21
+
+
+*** Exercise 1.42:
+
+(define (compose f g)
+  (lamdba (x) (f (g x))))
+
+
+*** Exercise 1.43:
+
+(define (repeated f n)
+  (define (rep-iter g n)
+    (cond ((= n 1) g)
+          ((even? n) (rep-iter (compose g g) (/ n 2)))
+          (else (rep-iter (compose f g) (- n 1)))))
+  (rep-iter f n))
+
+
+*** Exercise 1.44:
+
+(define dx 0.00001)
+
+(define (smooth f)
+  (lambda (x) (/ (+ (f (- x dx)) (f x) (f (+ x dx)))
+                 3.0)))
+
+The n-fold smoothed function:
+
+((repeated smooth n) f)
+
+
+*** Exercise 1.45:
+
+

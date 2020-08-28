@@ -1,0 +1,112 @@
+*** Exercise 2.17:
+
+;; Returns the last-pair in a list
+(define (last-pair l)
+  (define (last-pair-iter m n)
+    (if (null? n)
+      m
+      (last-pair-iter n (cdr n))))
+  (if (null? l)
+    (error "Cannot return last pair of an empty list.")
+    (last-pair-iter l (cdr l))))
+
+
+*** Exercise 2.18:
+
+;; Takes a list and returns a list of the same elements in reverse order.
+(define (reverse input-list)
+  (define (iter temp-list l)
+    (if (null? l)
+      temp-list
+      (iter (cons (car l) temp-list) (cdr l))))
+  (iter '() input-list))
+
+
+*** Exercise 2.19:
+
+(define first-denomination car)
+
+(define except-first-denomination cdr)
+
+(define no-more? null?)
+
+The order of the coin-values list does not matter since all combinations are calculated.
+
+
+*** Exercise 2.20:
+
+(define (same-parity . l)
+  (define (par-func parity? items)
+    (cond ((null? items)
+           '())
+          ((parity? (car items))
+           (cons (car items) (par-func parity? (cdr items))))
+          (else
+            (par-func parity? (cdr items)))))
+  (cond ((null? l)
+         l)
+        ((even? (car l))
+         (par-func even? l))
+        (else
+         (par-func odd? l))))
+
+
+*** Exercise 2.21:
+
+(define (square-list items)
+  (if (null? items)
+    '()
+    (cons (square (car items))
+          (square-list (cdr items)))))
+
+(define (square-list items)
+  (map square items))
+
+
+*** Exercise 2.22:
+
+(define (square-list items)
+  (define (iter things answer)
+    (if (null? things)
+        answer
+        (iter (cdr things)
+              (cons (square (car things))
+                    answer))))
+  (iter items '()))
+
+The answer list is produced in reverse order because the list is constructed with cons from the first processed
+element out.  Cons will always add elements on to the front of the list.
+
+e.g.
+(square-list '(1 2 3))
+(iter '(1 2 3) '())
+(iter '(2 3) (cons (square 1) '()))
+(iter '(2 3) '(1))
+(iter '(3) (cons (square 2) '(1)))
+(iter '(3) '(4 1))
+(iter '() (cons (square 3) '(4 1)))
+(iter '() '(9 4 1))
+'(9 4 1)
+
+Interchange arguments to cons:
+
+(define (square-list items)
+  (define (iter things answer)
+    (if (null? things)
+        answer
+        (iter (cdr things)
+              (cons answer
+                    (square (car things))))))
+  (iter items '()))
+
+This will not work either because it will end up using cons to add a list in front of a value, resulting in nested lists.
+
+
+*** Exercise 2.23:
+
+(define (for-each proc items)
+  (if (null? items)
+      #t
+      (begin
+        (proc (car items))
+        (for-each proc (cdr items)))))
