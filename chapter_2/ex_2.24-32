@@ -133,3 +133,68 @@ it is abstracted from the implementation fo the constructors and selectors.
 
 (define right-branch cdr)
 (define branch-structure cdr)
+
+
+*** Exercise 2.30:
+
+(define (square-tree tree)
+  (cond ((null? tree) '())
+        ((not (pair? tree)) (square tree))
+        (else (cons (square-tree (car tree))
+                    (square-tree (cdr tree))))))
+
+(define (square-tree-map tree)
+  (map (lambda (sub-tree)
+         (if (pair? sub-tree)
+             (square-tree-map sub-tree)
+             (square sub-tree)))
+       tree))
+
+
+*** Exercise 2.31:
+
+(define (tree-map fn tree)
+  (map (lambda (sub-tree)
+         (if (pair? sub-tree)
+             (tree-map fn sub-tree)
+             (fn sub-tree)))
+       tree))
+
+
+*** Exercise 2.32:
+
+(define (subsets s)
+  (if (null? s)
+      (list '())
+      (let ((rest (subsets (cdr s))))
+        (append rest (map (lambda (x)
+                            (append (list (car s)) x))
+                          rest)))))
+
+Given that a set is a list of distinct elements, the car will always be a distinct value while the cdr will be a list
+of distinct elements or the empty list.
+
+The set of subsets will naturally be the union of the set of all subsets that don't include the first element ('the rest'), with
+the set of subsets created by appending a list containing the first element to each subset in 'the rest'
+
+E.g.
+
+Take the set (2).
+
+Exclude the first element and you get (), the empty set.
+
+Subsets of this are (())
+
+Append (2) to each element in (()) => ((2))
+
+Append (()) to ((2)) => (() (2)).
+
+Now take the set (1 2).
+
+Exclude the first element and you get (2), which we've just seen has the subsets (() (2)).
+
+Append (1) to each element in (() (2)) => ((1) (1 2))
+
+Append (() (2)) to ((1) (1 2)) => (() (2) (1) (1 2)).
+
+etc.

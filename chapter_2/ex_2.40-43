@@ -1,0 +1,46 @@
+*** Exercise 2.40:
+
+;; Function created for exercise
+(define (unique-pairs n)
+  (flatmap (lambda (i)
+             (map (lambda (j) (list i j))
+                  (enumerate-interval 1 (- i 1))))
+           (enumerate-interval 1 n)))
+
+;; Simplified function
+(define (prime-sum-pairs n)
+  (map make-pair-sum
+       (filter prime-sum?
+               (unique-pairs n))))
+
+
+*** Exercise 2.41:
+
+(define (make-triple-sum triple)
+  (list (car triple)
+        (cadr triple)
+        (caddr triple)
+        (+ (car triple) (cadr triple) (caddr triple))))
+
+(define (unique-triples n)
+  (flatmap
+    (lambda (i)
+      (flatmap
+        (lambda (j)
+          (map (lambda (k) (list i j k))
+               (enumerate-interval 1 (- j 1))))
+        (enumerate-interval 1 (- i 1))))
+    (enumerate-interval 1 n)))
+
+(define (find-triples-for-sum n s)
+  (define (sum-equals-s? triple)
+    (= (+ (car triple) (cadr triple) (caddr triple))
+       s))
+  (map make-triple-sum
+       (filter sum-equals-s?
+               (unique-triples n))))
+
+
+*** Exercise 2.42:
+
+
