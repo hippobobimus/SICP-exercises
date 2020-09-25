@@ -43,4 +43,56 @@
 
 *** Exercise 2.42:
 
+;; Board and position functions
+(define (make-position row col)
+  (list row col))
 
+(define row car)
+
+(define col cadr)
+
+(define empty-board '())
+
+(define (adjoin-position row col positions)
+  (cons (make-position row col)
+        positions))
+
+;; Check whether a queen's position is safe
+(define (safe? queen-col positions)
+  (let ((queen-row (row (car (filter (lambda (x) (= (col x) queen-col))
+                                     positions)))))
+    (define (iter up-diag down-diag rest-of-positions)
+      (if (null? rest-of-positions)
+          #t
+          (let ((test-queen-row (row (car rest-of-positions))))
+            (if (or (= queen-row test-queen-row)
+                    (= up-diag test-queen-row)
+                    (= down-diag test-queen-row))
+                #f
+                (iter (- up-diag 1) (+ down-diag 1) (cdr rest-of-positions))))))
+    (iter (- queen-row 1) (+ queen-row 1) (cdr positions))))
+
+;; Produces all the ways of safely placing n queens on an n x n chess board
+(define (queens board-size)
+  (define (queen-cols k)
+    (if (= k 0)
+        (list empty-board)
+        (filter
+          (lambda (positions) (safe? k positions))
+          (flatmap
+            (lambda (rest-of-queens)
+              (map (lambda (new-row)
+                     (adjoin-position new-row k rest-of-queens))
+                   (enumerate-interval 1 board-size)))
+            (queen-cols (- k 1))))))
+  (queen-cols board-size))
+
+
+*** Exercise 2.43:
+
+The interchange means that there is a recursive call to queen-cols for every element in every column, rather
+than simply for each column.  Therefore the work is duplicated board-size times at each recursion.
+
+If the original procedure runs in time T, then the interchanged procedure will run in (board-size^board-size) * T.
+
+Therefore, for an 8x8 board, it will run in 8^8 T = 16,777,216 T
