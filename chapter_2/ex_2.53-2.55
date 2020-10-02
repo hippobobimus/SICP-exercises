@@ -31,4 +31,29 @@
 
 *** Exercise 2.54:
 
+(define (equal? x y)
+  (cond ((and (not (pair? x))
+              (not (pair? y)))
+         (eq? x y))
+        ((and (pair? x)
+              (pair? y))
+         (and (equal? (car x)
+                      (car y))
+              (equal? (cdr x)
+                      (cdr y))))
+        (else #f)))
 
+
+*** Exercise 2.55:
+
+''abracadabra is equivalent to:
+
+(quote (quote abracadabra))
+
+Therefore the inner quote is not evaluated and you effectively have:
+
+'(quote abracadabra)
+
+And the car of this is:
+
+'quote
