@@ -1,0 +1,234 @@
+*** Exercise 2.73:
+
+(a)
+
+Instead of using dispatch on type with calls to sum? or product? followed by the appropriate procedures,
+a data directed style is used.  As such, get is called using 'deriv and the expression's operator to get the
+deriv procedure relevant to the operator type.  The retrieved procedure is then supplied with the operands of
+the expression and the var against which the derivative is to be taken.
+
+We can't assimilate the predicates number? and same-variable? becuase their bodies do not have a function that
+can be retrieved.
+
+(b)
+
+;; Sum package
+(define (install-sum-package)
+  ;; internal procedures
+  (define (=number? expr num)
+    (and (number? expr) (= expr num)))
+  (define (make-sum a1 a2)
+    (cond ((=number? a1 0) a2)
+          ((=number? a2 0) a1)
+          ((and (number? a1) (number? a2)) (+ a1 a2))
+          (else (list '+ a1 a2))))
+  (define (addend s)
+    (car s))
+  (define (augend s)
+    (cadr s))
+  (define (deriv-sum expr var)
+    (make-sum (deriv (addend expr)
+                     var)
+              (deriv (augend expr)
+                     var)))
+  ;; interface to the rest of the system
+  (put 'deriv '+ deriv-sum)
+  'done)
+
+;; Product package
+(define (install-product-package)
+  ;; internal procedures
+  (define (=number? expr num)
+    (and (number? expr) (= expr num)))
+  (define (make-product m1 m2)
+    (cond ((or (=number? m1 0) (=number? m2 0)) 0)
+          ((=number? m1 1) m2)
+          ((=number? m2 1) m1)
+          ((and (number? m1) (number? m2)) (* m1 m2))
+          (else (list '* m1 m2))))
+  (define (make-sum a1 a2)
+    (cond ((=number? a1 0) a2)
+          ((=number? a2 0) a1)
+          ((and (number? a1) (number? a2)) (+ a1 a2))
+          (else (list '+ a1 a2))))
+  (define (multiplier p)
+    (car p))
+  (define (multiplicand p)
+    (cadr p))
+  (define (deriv-prod expr var)
+    (make-sum
+      (make-product (multiplier expr)
+                    (deriv (multiplicand expr) var))
+      (make-product (deriv (multiplier expr) var)
+                    (multiplicand expr))))
+  ;; interface to the rest of the system
+  (put 'deriv '* deriv-prod)
+  'done)
+
+(c)
+
+;; Exponentiation package
+(define (install-exp-package)
+  ;;internal procedures
+  (define (=number? expr num)
+    (and (number? expr) (= expr num)))
+  (define (make-product m1 m2)
+    (cond ((or (=number? m1 0) (=number? m2 0)) 0)
+          ((=number? m1 1) m2)
+          ((=number? m2 1) m1)
+          ((and (number? m1) (number? m2)) (* m1 m2))
+          (else (list '* m1 m2))))
+  (define (make-sum a1 a2)
+    (cond ((=number? a1 0) a2)
+          ((=number? a2 0) a1)
+          ((and (number? a1) (number? a2)) (+ a1 a2))
+          (else (list '+ a1 a2))))
+  (define (make-exponentiation b e)
+    (cond ((=number? b 0) 0)
+          ((=number? e 0) 1)
+          ((and (number? b) (number? e)) (exp b e))
+          (else (list '** b e))))
+  (define (base e) (car e))
+  (define (exponent e) (cadr e))
+  (define (deriv-exp expr var)
+    (make-product (make-product (exponent expr)
+                                (make-exponentiation (base expr)
+                                                     (make-sum (exponent expr)
+                                                               '-1)))
+                  (deriv (base expr) var)))
+  ;; interface to the rest of the system
+  (put 'deriv '** deriv-exp)
+  'done)
+
+(d)
+
+If the dispatch line in deriv changes from:
+
+((get 'deriv (operator expr)) (operands expr) var)
+
+to:
+
+((get (operator expr) 'deriv) (operands expr) var)
+
+Then the only change required is switching the order in put.  e.g. from:
+
+(put 'deriv '+ deriv-sum)
+
+to:
+
+(put '+ 'deriv deriv-sum)
+
+
+*** Exercise 2.74:
+
+(a-c)
+
+;; East division
+(define (install-east-div-pkg)
+  ;; internal procedures
+  (define (get-name record) (car record))
+  (define (get-salary record) (cadr record))
+  (define (get-record name file)
+    (cond ((null? file)
+           '())
+          ((eq? name (get-name (car file)))
+           (car file))
+          (else (get-record name (cdr file)))))
+  ;; interface to the rest of the system
+  (define (tag x) (attach-tag 'east x))
+  (put 'get-salary 'east get-salary)
+  (put 'get-record 'east 
+       (lambda (x y)
+         (let ((record (get-record x y)))
+           (if (null? record)
+               record
+               (tag record)))))
+  'done)
+
+;; West division
+(define (install-west-div-pkg)
+  ;; internal procedures
+  (define (get-name record) (cadr record))
+  (define (get-salary record) (car record))
+  (define (get-record name file)
+    (cond ((null? file)
+           '())
+          ((eq? name (get-name (car file)))
+           (car file))
+          (else (get-record name (cdr file)))))
+  ;; interface to the rest of the system
+  (define (tag x) (attach-tag 'west x))
+  (put 'get-salary 'west get-salary)
+  (put 'get-record 'west 
+       (lambda (x y)
+         (let ((record (get-record x y)))
+           (if (null? record)
+               record
+               (tag record)))))
+  'done)
+
+;; Generics
+(define (get-record name file)
+  ((get 'get-record (type-tag file)) name (contents file)))
+
+(define (get-salary name file)
+  (let ((record (get-record name file)))
+    ((get 'get-salary (type-tag record)) (contents record))))
+
+(define (find-employee-record name files)
+  (if (null? files)
+      (display "Employee not found.")
+      (let ((record (get-record name (car files))))
+        (if (null? record)
+            (find-employee-record name (cdr files))
+            record))))
+
+(d)
+
+All they would need to do is create a package with the appropriate get-record and get-salary procedures for
+the new company.
+
+
+*** Exercise 2.75:
+
+(define (make-from-mag-ang r a)
+  (define (dispatch op)
+    (cond ((eq? op 'real-part)
+           (* r (cos a)))
+          ((eq? op 'imag-part)
+           (* r (sin a)))
+          ((eq? op 'magnitude) r)
+          ((eq? op 'angle) a)
+          (else
+            (error "Unknown op -- MAKE-FROM-MAG-ANG" op))))
+  dispatch)
+
+(define (apply-generic op arg) (arg op))
+
+(define (get-real-part x) (apply-generic 'real-part x))
+(define (get-imag-part x) (apply-generic 'imag-part x))
+(define (get-magnitude x) (apply-generic 'magnitude x))
+(define (get-angle x) (apply-generic 'angle x))
+
+
+*** Exercise 2.76:
+
+Changes required to a system when using different strategies when new data objects or operations are required.
+
+- Explicit Dispatch
+
+New data object: Edit every operation to include handling for the new data object. 
+New operation: Add the operation, including in it handling for all the exisiting data objects. 
+
+- Data-directed
+
+New data object:  Create a new package with all the appropriate operations.
+New operation:  Add the operation to every data object package.
+
+- Message-passing
+
+New data-object: Create a new procedure representation for this data type. 
+New operation: Edit the procedure representation of each data type.
+
+If new types are are often added, data-directed or message-passing style would be optimal.  If new operations are frequently added
+then either explicit dispatch could be more effective since you would simply need to add the operation in one place.

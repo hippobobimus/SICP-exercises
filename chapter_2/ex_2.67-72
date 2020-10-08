@@ -1,0 +1,170 @@
+*** Exercise 2.67:
+
+(A D A B B C A)
+
+
+*** Exercise 2.68:
+
+(define (symbol-in-set? symbol set)
+  (cond ((null? set) #f)
+        ((eq? symbol (car set)) #t)
+        (else (symbol-in-set? symbol (cdr set)))))
+
+(define (encode message tree)
+  (if (null? message)
+      '()
+      (append (encode-symbol (car message) tree)
+              (encode (cdr message) tree))))
+
+(define (encode-symbol symbol tree)
+  (if (leaf? tree)
+      '()
+      (let ((left (left-branch tree))
+            (right (right-branch tree)))
+        (cond ((symbol-in-set? symbol (symbols left))
+               (cons 0 (encode-symbol symbol left)))
+              ((symbol-in-set? symbol (symbols right))
+               (cons 1 (encode-symbol symbol right)))
+              (else (error "bad symbol -- ENCODE-SYMBOL" symbol))))))
+
+
+*** Exercise 2.69:
+
+;; Generating a Huffman encoding tree
+(define (adjoin-set x set)
+  (cond ((null? set) (list x))
+        ((< (weight x) (weight (car set))) (cons x set))
+        (else (cons (car set)
+                    (adjoin-set x (cdr set))))))
+
+(define (successive-merge leaf-set)
+  (if (null? (cdr leaf-set))
+      (car leaf-set)
+      (successive-merge (adjoin-set (make-code-tree (car leaf-set)
+                                                    (cadr leaf-set))
+                                    (cddr leaf-set)))))
+
+(define (make-leaf-set pairs)
+  (if (null? pairs)
+      '()
+      (let ((pair (car pairs)))
+        (adjoin-set (make-leaf (car pair)
+                               (cadr pair))
+                    (make-leaf-set (cdr pairs))))))
+
+(define (generate-huffman-tree pairs)
+  (successive-merge (make-leaf-set pairs)))
+
+
+*** Exercise 2.70:
+
+Length of Huffman encoded message (bits): 84
+
+Length of original message (symbols): 36
+
+Using a fixed-length code would require 3 bits per symbol for the 8-symbol alphabet.
+Therefore the smallest number of bits required to encode the song in this way would be: 3 * 36 = 108
+
+
+*** Exercise 2.71:
+
+Alphabet of n symbols with relative frequencies 1, 2, 4, ..., 2^(n-1)
+
+Tree for n = 5:
+
+              (s1-5 31)
+                 /  \
+                /    \
+               /      \
+          (s1-4 15)    (s5 16)
+             /  \
+            /    \
+           /      \
+      (s1-3 7)     (s4 8)
+         /  \
+        /    \
+       /      \
+  (s1-2 3)     (s3 4)
+     /  \
+    /    \
+   /      \
+(s1 1)     (s2 2)
+
+Tree for n = 10:
+
+                                  (s1-10 1023)
+                                     /  \
+                                    /    \
+                                   /      \
+                              (s1-9 511)   (s10 512)
+                                 /  \
+                                /    \
+                               /      \
+                          (s1-8 255)   (s9 256)
+                             /  \
+                            /    \
+                           /      \
+                      (s1-7 127)   (s8 128)
+                         /  \
+                        /    \
+                       /      \
+                  (s1-6 63)    (s7 64)
+                     /  \
+                    /    \
+                   /      \
+              (s1-5 31)    (s6 32)
+                 /  \
+                /    \
+               /      \
+          (s1-4 15)    (s5 16)
+             /  \
+            /    \
+           /      \
+      (s1-3 7)     (s4 8)
+         /  \
+        /    \
+       /      \
+  (s1-2 3)     (s3 4)
+     /  \
+    /    \
+   /      \
+(s1 1)     (s2 2)
+
+To encode the most frequent bit requires just 1 bit. To encode the least frequent bit requires (n - 1) bits.
+
+
+*** Exercise 2.72:
+
+Consider the procedure:
+
+(define (encode-symbol symbol tree)
+  (if (leaf? tree)
+      '()
+      (let ((left (left-branch tree))
+            (right (right-branch tree)))
+        (cond ((symbol-in-set? symbol (symbols left))
+               (cons 0 (encode-symbol symbol left)))
+              ((symbol-in-set? symbol (symbols right))
+               (cons 1 (encode-symbol symbol right)))
+              (else (error "bad symbol -- ENCODE-SYMBOL" symbol))))))
+
+leaf?, left-branch, right-branch, symbols and cons are all O(1) operations.  So we must consider symbol-in-set? and
+the recursive call to encode-symbol.
+
+symbol-in-set? has an order of growth proportional to the number of elements in the set since in a worst case scenario,
+where the symbol is found in the last element, it will need to visit every element in the set.
+
+Building on exercise 2.71, to encode the most frequent bit requires a call to symbol-in-set? for the set of (n - 1)
+symbols at the first left branch and another call to symbol-in-set? for the set of symbols at the right branch.
+As this is a leaf node, there is just 1 element in the set.  Therefore it contributes O(n) to the overall order of growth.
+
+There is then a recursive call to encode-symbol, but as we are at a leaf node there are no further calls to symbol-in-set?
+
+Thus for the most frequent symbol the encoding has O(n).
+
+Now taking the case of the least frequent symbol.  This time there are (n - 1) calls to symbol-in-set? as the procedure
+navigates down the left branches of the tree.  Each successive call searches a set of 1 less element than before so we have:
+
+O((n-1) + (n-2) + (n-3) + ... + 1) = O(n(n-1)/2)
+
+So the least frequent symbol's encoding procedure has an order of growth O(n^2).
