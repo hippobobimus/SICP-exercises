@@ -1,3 +1,133 @@
 *** Exercise 2.77:
 
+This works because the complex number is tagged with both the 'complex' and 'rectangular'/'polar' tags.  Therefore,
+apply-generic is called twice - dispatching first to the complex package and then to the rectangular or polar
+package depending on the tagging present.
 
+When 'real-part' is called on a complex number, 'apply-generic' strips off the first 'complex' tag and calls
+the 'real-part' function provided by the complex package.  This in turn calls 'apply-generic' and strips off
+the rectangular/polar tag before calling the real-part function in either the rectangular or polar packages as
+appropriate.
+
+For example:
+
+z: (complex rectangular 3 . 4)
+
+(magnitude (complex rectangular 3 . 4))
+(apply-generic 'magnitude (complex rectangular 3 . 4))
+((get 'magnitude 'complex) (rectangular 3 . 4))
+(magnitude (rectangular 3 . 4))
+(apply-generic 'magnitude (rectangular 3 . 4))
+((get 'magnitude 'rectangular) (3 . 4))
+(sqrt (+ (square (real-part z))
+         (square (imag-part z))))
+(sqrt (+ (square (car z))
+         (square (cdr z))))
+(sqrt (+ (square 3)
+         (square 4)))
+3
+
+The apply-generic procedure is invoked twice, for each tag included in the complex number.
+
+
+*** Exercise 2.78:
+
+(define (attach-tag type-tag contents)
+  (if (number? contents)
+      contents
+      (cons type-tag contents)))
+
+(define (type-tag datum)
+  (cond ((pair? datum) (car datum))
+        ((number? datum) 'scheme-number)
+        (else (error "Bad tagged datum -- TYPE-TAG" datum))))
+
+(define (contents datum)
+  (cond ((pair? datum) (cdr datum))
+        ((number? datum) datum)
+        (else (error "Bad tagged datum -- CONTENTS" datum))))
+
+
+*** Exercise 2.79:
+
+(define (equ? x y) (apply-generic 'equ? x y))
+
+;; Ordinary arithmetic
+(define (install-scheme-number-package)
+  ...
+  (put 'equ? '(scheme-number scheme-number) equal?)
+  'done)
+
+;; Rational arithmetic
+(define (install-rational-package)
+  ...
+  (define (equ? x y)
+    (and (equal? (* (numer x) (denom y))
+                 (* (numer y) (denom x)))))
+  ;; interface to rest of the system
+  ...
+  (put 'equ? '(rational rational) equ?)
+  'done)
+
+;; Complex arithmetic
+(define (install-complex-package)
+  ...
+  (define (equ? z1 z2)
+    (and (equal? (real-part z1) (real-part z2))
+         (equal? (imag-part z1) (imag-part z2))))
+  ;; interface to rest of the system
+  ...
+  (put 'equ? '(complex complex) equ?)
+  'done)
+
+
+*** Exercise 2.80:
+
+(define (=zero? x) (apply-generic '=zero? x))
+
+;; Ordinary arithmetic
+(define (install-scheme-number-package)
+  ...
+  (put '=zero? '(scheme-number) zero?)
+  'done)
+
+;; Rational arithmetic
+(define (install-rational-package)
+  ;; internal procedures
+  ...
+  (define (=zero? x)
+    (and (zero? (numer x))
+         (not (zero? (denom x)))))
+  ;; interface to rest of the system
+  ...
+  (put '=zero? '(rational) =zero?)
+  'done)
+
+;; Rectangular package
+(define (install-rectangular-package)
+  ;; internal procedures
+  ...
+  (define (=zero? z)
+    (and (zero? (real-part z))
+         (zero? (imag-part z))))
+  ;; interface to the rest of the system
+  ...
+  (put '=zero? '(rectangular) =zero?)
+  'done)
+
+;; Polar package
+(define (install-polar-package)
+  ;; internal procedures
+  ...
+  (define (=zero? z)
+    (zero? (magnitude z)))
+  ;; interface to the rest of the system
+  ...
+  (put '=zero? '(polar) =zero?)
+  'done)
+
+;; Complex arithmetic
+(define (install-complex-package)
+  ...
+  (put '=zero? '(complex) =zero?)
+  'done)
