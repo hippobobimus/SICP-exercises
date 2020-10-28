@@ -1,0 +1,265 @@
+*** Exercise 2.93:
+
+(define (install-rational-package)
+  ;; internal procedures
+  (define (numer x) (car x))
+  (define (denom x) (cdr x))
+  (define (make-rat n d) (cons n d))
+  (define (add-rat x y)
+    (make-rat (add (mul (numer x) (denom y))
+                   (mul (numer y) (denom x)))
+              (mul (denom x) (denom y))))
+  (define (sub-rat x y)
+    (make-rat (sub (mul (numer x) (denom y))
+                   (mul (numer y) (denom x)))
+              (mul (denom x) (denom y))))
+  (define (mul-rat x y)
+    (make-rat (mul (numer x) (numer y))
+              (mul (denom x) (denom y))))
+  (define (div-rat x y)
+    (make-rat (mul (numer x) (denom y))
+              (mul (denom x) (numer y))))
+  (define (equ? x y)
+    (and (equ? (mul (numer x) (denom y))
+                 (mul (numer y) (denom x)))))
+  (define (=zero? x)
+    (and (=zero? (numer x))
+         (not (=zero? (denom x)))))
+  ;; interface to rest of the system
+  (define (tag x) (attach-tag 'rational x))
+  (put 'add '(rational rational)
+       (lambda (x y) (tag (add-rat x y))))
+  (put 'sub '(rational rational)
+       (lambda (x y) (tag (sub-rat x y))))
+  (put 'mul '(rational rational)
+       (lambda (x y) (tag (mul-rat x y))))
+  (put 'div '(rational rational)
+       (lambda (x y) (tag (div-rat x y))))
+  (put 'make 'rational
+       (lambda (n d) (tag (make-rat n d))))
+  (put 'equ? '(rational rational) equ?)
+  (put '=zero? '(rational) =zero?)
+  'done)
+
+(define (make-rational n d)
+  ((get 'make 'rational) n d))
+
+
+*** Exercise 2.94:
+
+(define (install-polynomial-package)
+
+  ...
+
+  (define (gcd-terms a b)
+    (if (empty-termlist? b)
+        a
+        (gcd-terms b (remainder-terms a b))))
+
+  (define (remainder-terms a b)
+    (cadr (div-terms a b)))
+
+  ...
+
+  (define (gcd-poly p1 p2)
+    (if (same-variable? (variable p1) (variable p2))
+        (make-poly (variable p1)
+                   (gcd-terms (term-list p1)
+                              (term-list p2)))
+        (error "Polys not in same var -- DIV-POLY"
+               (list p1 p2))))
+
+
+  ;; interface to rest of the system
+
+  ...
+
+  (put 'gcd '(polynomial polynomial)
+       (lambda (p1 p2) (tag (gcd-poly p1 p2))))
+  'done)
+
+;; Real arithmetic
+(define (install-real-package)
+
+  ...
+
+  (put 'gcd '(real real)
+       (lambda (x y) (tag (gcd x y))))
+  'done)
+
+For the given example;
+
+gcd of (x^4 - x^3 - 2x^2 + 2x) and (x^3 - x) is calculated as:
+
+-x^2 + x
+
+Check:
+
+(x^4 - x^3 - 2x^2 + 2x) = x(x^3 - x^2 - 2x + 2)
+                        = x(-x + 1)(-x^2 + 2)
+                        = (-x^2 + x)(-x^2 + 2)
+
+(x^3 - x) = x(x^2 + 1)
+          = x(-x + 1)(-x - 1)
+          = (-x^2 + x)(-x - 1)
+
+QED.
+
+
+*** Exercise 2.95:
+
+Trace the call to greatest-common-divisor:
+
+Poly 1: (polynomial x (2 1) (1 -2) (0 1))
+Poly 2: (polynomial x (2 11) (0 7))
+Poly 3: (polynomial x (1 13) (0 5))
+Q1 = P1 * P2: (polynomial x (4 11) (3 -22) (2 18) (1 -14) (0 7))
+Q2 = P1 * P3: (polynomial x (3 13) (2 -21) (1 3) (0 5))
+GCD of Q1 and Q2: >(gcd-terms
+  '((4 11) (3 -22) (2 18) (1 -14) (0 7))
+  '((3 13) (2 -21) (1 3) (0 5)))
+> (remainder-terms
+   '((4 11) (3 -22) (2 18) (1 -14) (0 7))
+   '((3 13) (2 -21) (1 3) (0 5)))
+> >(div-terms
+    '((4 11) (3 -22) (2 18) (1 -14) (0 7))
+    '((3 13) (2 -21) (1 3) (0 5)))
+> > (div-terms
+     '((3 -55/13) (2 201/13) (1 -237/13) (0 7))
+     '((3 13) (2 -21) (1 3) (0 5)))
+> > >(div-terms
+      '((2 1458/169) (1 -2916/169) (0 1458/169))
+      '((3 13) (2 -21) (1 3) (0 5)))
+< < <'(() ((2 1458/169) (1 -2916/169) (0 1458/169)))
+< < '(((0 -55/169)) ((2 1458/169) (1 -2916/169) (0 1458/169)))
+< <'(((1 11/13) (0 -55/169)) ((2 1458/169) (1 -2916/169) (0 1458/169)))
+< '((2 1458/169) (1 -2916/169) (0 1458/169))
+>(gcd-terms
+  '((3 13) (2 -21) (1 3) (0 5))
+  '((2 1458/169) (1 -2916/169) (0 1458/169)))
+> (remainder-terms
+   '((3 13) (2 -21) (1 3) (0 5))
+   '((2 1458/169) (1 -2916/169) (0 1458/169)))
+> >(div-terms
+    '((3 13) (2 -21) (1 3) (0 5))
+    '((2 1458/169) (1 -2916/169) (0 1458/169)))
+> > (div-terms
+     '((2 5) (1 -10) (0 5))
+     '((2 1458/169) (1 -2916/169) (0 1458/169)))
+> > >(div-terms '() '((2 1458/169) (1 -2916/169) (0 1458/169)))
+< < <'(() ())
+< < '(((0 845/1458)) ())
+< <'(((1 2197/1458) (0 845/1458)) ())
+< '()
+>(gcd-terms '((2 1458/169) (1 -2916/169) (0 1458/169)) '())
+<'((2 1458/169) (1 -2916/169) (0 1458/169))
+(polynomial x (2 1458/169) (1 -2916/169) (0 1458/169))
+
+
+The result is in the same ratio to p1, since:
+
+(1458/169)x^2 - (2916/169)x + 1458/169 = (1458/169) * (x^2 - 2x + 1)
+
+The difficulties arise in the first call to div-terms when non-integer operations occur.
+
+
+*** Exercise 2.96:
+
+  (define (gcd-terms a b)
+    (if (empty-termlist? b)
+        (remove-common-factors-of-coeffs a)
+        (gcd-terms b (pseudoremainder-terms a b))))
+  (define (remove-common-factors-of-coeffs termlist)
+    (let ((coeffs (map coeff termlist)))
+      (let ((gcd-coeffs (apply gcd coeffs)))
+        (div-terms termlist
+                   (adjoin-term (make-term 0 gcd-coeffs)
+                                (the-empty-termlist))))))
+
+  (define (pseudoremainder-terms a b)
+    (let ((o1 (order (first-term a)))
+          (o2 (order (first-term b)))
+          (c (coeff (first-term b))))
+    (cadr (div-terms (mul-term-by-all-terms (make-term 0
+                                                       (exp c (add 1 (add o1 (negate o2)))))
+                                            a)
+                     b))))
+
+
+*** Exercise 2.97:
+
+;; Generic functions and constructors
+
+...
+
+(define (reduce x y) (apply-generic 'reduce x y))
+
+;; Polynomials
+(define (install-polynomial-package)
+  ;; internal procedures
+
+  ...
+
+  (define (reduce-terms n d)
+    (let ((g (gcd-terms n d)))
+      (let ((int-fac (integerising-factor g n d)))
+        (map remove-common-factors-of-coeffs
+             (list (car (div-terms (mul-terms n (adjoin-term (make-term 0 int-fac)
+                                                             (the-empty-termlist)))
+                                   g))
+                   (car (div-terms (mul-terms d (adjoin-term (make-term 0 int-fac)
+                                                             (the-empty-termlist)))
+                                   g)))))))
+  (define (integerising-factor g n d)
+    (let ((c (coeff (first-term g)))
+          (o1 (max (order (first-term n))
+                   (order (first-term d))))
+          (o2 (order (first-term g))))
+      (exp c (add 1 (add o1 (negate o2))))))
+
+  ;; poly operations
+
+  ...
+
+  (define (reduce-poly p1 p2)
+    (if (same-variable? (variable p1) (variable p2))
+        (map (lambda (x) (make-poly (variable p1) x))
+             (reduce-terms (term-list p1)
+                           (term-list p2)))
+        (error "Polys not in same var -- REDUCE-POLY"
+               (list p1 p2))))
+
+  ;; interface to rest of the system
+
+  ...
+
+  (put 'reduce '(polynomial polynomial)
+       (lambda (p1 p2) (map tag (reduce-poly p1 p2))))
+  'done)
+
+(define (install-rational-package)
+  ;; internal procedures
+
+  ...
+
+  (define (make-rat n d)
+    (let ((reduced-nd-list (reduce n d)))
+      (cons (car reduced-nd-list)
+            (cadr reduced-nd-list))))
+
+  ...
+
+  'done)
+
+(define (install-real-package)
+  ;; internal procedures
+  (define (reduce-integers n d)
+    (let ((g (gcd n d)))
+      (list (/ n g) (/ d g))))
+  ;; interface to rest of the system
+
+  ...
+
+  (put 'reduce '(real real)
+       (lambda (x y) (map tag (reduce-integers x y))))
+  'done)

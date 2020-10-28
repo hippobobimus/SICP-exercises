@@ -1,0 +1,146 @@
+*** Exercise 2.87:
+
+(define (install-polynomial-package)
+  ;; internal procedures
+
+  ...
+
+  (define (=zero-poly? p)
+    (terms-zero? (term-list p)))
+  (define (terms-zero? L)
+    (cond ((empty-termlist? L) #t)
+          ((= (coeff (first-term L)) 0)
+           (terms-zero? (rest-terms L)))
+          (else #f)))
+
+  ;; interface to rest of the system
+
+  ...
+
+  (put '=zero? '(polynomial) =zero-poly?)
+  'done)
+
+
+*** Exercise 2.88:
+
+(define (negate x) (apply-generic 'negate x))
+
+...
+
+(define (install-polynomial-package)
+  ;; internal procedures
+
+  ...
+
+  (define (sub-poly p1 p2)
+    (add-poly p1 (negate-poly p2)))
+
+  ...
+
+  (define (negate-poly p)
+    (make-poly (variable p)
+               (negate-terms (term-list p))))
+  (define (negate-terms L)
+    (if (empty-termlist? L)
+        (the-empty-termlist)
+        (let ((t1 (first-term L)))
+          (adjoin-term (make-term (order t1)
+                                  (negate (coeff t1)))
+                       (negate-terms (rest-terms L))))))
+
+  ;; interface to rest of the system
+
+  ...
+
+  (put 'negate '(polynomial)
+       (lambda (p) (tag (negate-poly p))))
+  (put 'sub '(polynomial polynomial)
+       (lambda (p1 p2) (tag (sub-poly p1 p2))))
+  'done)
+
+(define (install-real-package)
+
+  ...
+
+  (put 'negate '(real)
+       (lambda (x) (tag (- x))))
+  'done)
+
+
+*** Exercise 2.89:
+
+(define (install-polynomial-package)
+  ;; internal procedures
+
+  ...
+
+  (define (first-term term-list)
+    (make-term (- (length term-list) 1)
+               (car term-list)))
+
+  ...
+  
+  (define (adjoin-term term term-list)
+        (cons (coeff term) term-list))
+
+
+*** Exercise 2.90:
+
+hmmm... not spending any more time on this.
+
+
+*** Exercise 2.91:
+
+Using dense definition of term lists.
+
+(define (install-polynomial-package)
+  ;; internal procedures
+
+  ...
+
+  ;; representation of terms and term lists
+
+  ...
+
+  (define (div-terms L1 L2)
+    (if (empty-termlist? L1)
+        (list (the-empty-termlist) (the-empty-termlist))
+        (let ((t1 (first-term L1))
+              (t2 (first-term L2)))
+          (if (> (order t2) (order t1))
+              (list (the-empty-termlist) L1)
+              (let ((new-c (div (coeff t1) (coeff t2)))
+                    (new-o (- (order t1) (order t2))))
+                (let ((rest-of-result
+                        (div-terms (add-terms L1
+                                              (negate-terms (mul-term-by-all-terms (make-term new-o new-c)
+                                                                                   L2)))
+                                   L2)))
+                  (list (add-terms (list (make-term new-o new-c))
+                                   (car rest-of-result))
+                        (cadr rest-of-result))))))))
+
+  ;; poly operations
+
+  ...
+
+  (define (div-poly p1 p2)
+    (if (same-variable? (variable p1) (variable p2))
+        (map (lambda (x) (make-poly (variable p1) x))
+             (div-terms (term-list p1)
+                        (term-list p2)))
+        (error "Polys not in same var -- DIV-POLY"
+               (list p1 p2))))
+
+  ;; interface to rest of the system
+
+  ...
+
+  (put 'div '(polynomial polynomial)
+       (lambda (p1 p2) (map tag (div-poly p1 p2))))
+  'done)
+
+
+*** Exercise 2.92:
+
+Skipping...
