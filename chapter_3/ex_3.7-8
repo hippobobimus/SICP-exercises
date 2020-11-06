@@ -1,0 +1,16 @@
+*** Exercise 3.7:
+
+(define (make-joint account original-password new-password)
+  (lambda (p m)
+    (if (eq? p new-password)
+        (account original-password m)
+        (lambda _ "Incorrect password"))))
+
+
+*** Exercise 3.8:
+
+(define f
+  (let ((y 1))
+    (lambda (x)
+      (set! y (* x y))
+      y)))

@@ -1,0 +1,181 @@
+*** Exercise 3.11:
+
+(define acc (make-account 50))
+
+           ------------------------------------------------------------
+global --> | make-account: -----------------------------------------  |
+env.       |                                                       |  |<--
+           | acc: --                                               |  |  |
+           --------|-----------------------------------------------|---  |
+                   |          ^                                    |     |
+                   |          |       --------------               |     |
+                   |          |       V            |               |     |
+                   |       ---------------         |               V     |
+                   |  E1-->| balance: 50 |         |             (.)(.)---
+                   |       | withdraw----+---> (.)(.)             |
+                   |       | deposit-----+---   |                 V
+                   |-------+-dispatch    |  |   V                 params: balance
+                   ||      ---------------  |   params: amount    body: (define withdraw ...)
+                   ||         ^       ^     |   body: ...               (define deposit ...)
+                   ||         |       |     |                           (define dispatch ...)
+                   ||         |       |     |                           (dispatch)
+                   VV         |       |     |
+                 (.)(.)--------   (.)(.)<----
+                  |                |
+                  |                V
+                  V                params: amount
+                  params: m        body: ...
+                  body: ,,,
+
+
+((acc 'deposit) 40)
+
+During:
+           ------------------------------------------------------------
+global --> | make-account: -----------------------------------------  |
+env.       |                                                       |  |<--
+           | acc: --                                               |  |  |
+           --------|-----------------------------------------------|---  |
+                   |          ^                                    |     |
+                   |          |       --------------               |     |
+                   |          |       V            |               |     |
+                   |       ---------------         |               V     |
+                   |  E1-->| balance: 50 |         |             (.)(.)---
+                   |       | withdraw----+---> (.)(.)             |
+                   |       | deposit-----+----  |                 V
+                   |-------+-dispatch    |   |  V                 params: balance
+                   ||      ---------------   |  params: amount    body: (define withdraw ...)
+                   ||       ^ ^  ^     ^     |  body: ...               (define deposit ...)
+                   ||       | |  |     |     |                          (define dispatch ...)
+                   ||       | |  |     |     |                          (dispatch)
+                   VV       | |  |     |     |
+                 (.)(.)------ |  |   (.)(.)<--
+                  |           |  |    |
+                  |           |  |    V
+                  V           |  |    params: amount
+                  params: m   |  |    body: ...
+                  body: ,,,   |  |
+                              |  |
+                              |  |-----------[ amount: 40 ]<--E3
+                              |              call to deposit
+                              |  
+                      E2-->[ m: 'deposit ]
+                           call to dispatch
+
+After:
+           ------------------------------------------------------------
+global --> | make-account: -----------------------------------------  |
+env.       |                                                       |  |<--
+           | acc: --                                               |  |  |
+           --------|-----------------------------------------------|---  |
+                   |          ^                                    |     |
+                   |          |       --------------               |     |
+                   |          |       V            |               |     |
+                   |       ---------------         |               V     |
+                   |  E1-->| balance: 90 |         |             (.)(.)---
+                   |       | withdraw----+---> (.)(.)             |
+                   |       | deposit-----+----  |                 V
+                   |-------+-dispatch    |   |  V                 params: balance
+                   ||      ---------------   |  params: amount    body: (define withdraw ...)
+                   ||       ^          ^     |  body: ...               (define deposit ...)
+                   ||       |          |     |                          (define dispatch ...)
+                   ||       |          |     |                          (dispatch)
+                   VV       |          |     |
+                 (.)(.)------        (.)(.)<--
+                  |                   |
+                  |                   V
+                  V                   params: amount
+                  params: m           body: ...
+                  body: ,,,       
+
+
+((acc 'withdraw) 60)
+
+During:
+           ------------------------------------------------------------
+global --> | make-account: -----------------------------------------  |
+env.       |                                                       |  |<--
+           | acc: --                                               |  |  |
+           --------|-----------------------------------------------|---  |
+                   |          ^                                    |     |
+                   |          |       --------------               |     |
+                   |          |       V            |               |     |
+                   |       ---------------         |               V     |
+                   |  E1-->| balance: 90 |         |             (.)(.)---
+                   |       | withdraw----+---> (.)(.)             |
+                   |       | deposit-----+----  |                 V
+                   |-------+-dispatch    |   |  V                 params: balance
+                   ||      ---------------   |  params: amount    body: (define withdraw ...)
+                   ||       ^ ^  ^     ^     |  body: ...               (define deposit ...)
+                   ||       | |  |     |     |                          (define dispatch ...)
+                   ||       | |  |     |     |                          (dispatch)
+                   VV       | |  |     |     |
+                 (.)(.)------ |  |   (.)(.)<--
+                  |           |  |    |
+                  |           |  |    V
+                  V           |  |    params: amount
+                  params: m   |  |    body: ...
+                  body: ,,,   |  |
+                              |  |
+                              |  |-----------[ amount: 60 ]<--E5
+                              |              call to withdraw
+                              |  
+                      E4-->[ m: 'withdraw ]
+                           call to dispatch
+
+After:
+           ------------------------------------------------------------
+global --> | make-account: -----------------------------------------  |
+env.       |                                                       |  |<--
+           | acc: --                                               |  |  |
+           --------|-----------------------------------------------|---  |
+                   |          ^                                    |     |
+                   |          |       --------------               |     |
+                   |          |       V            |               |     |
+                   |       ---------------         |               V     |
+                   |  E1-->| balance: 30 |         |             (.)(.)---
+                   |       | withdraw----+---> (.)(.)             |
+                   |       | deposit-----+----  |                 V
+                   |-------+-dispatch    |   |  V                 params: balance
+                   ||      ---------------   |  params: amount    body: (define withdraw ...)
+                   ||       ^          ^     |  body: ...               (define deposit ...)
+                   ||       |          |     |                          (define dispatch ...)
+                   ||       |          |     |                          (dispatch)
+                   VV       |          |     |
+                 (.)(.)------        (.)(.)<--
+                  |                   |
+                  |                   V
+                  V                   params: amount
+                  params: m           body: ...
+                  body: ,,,       
+
+
+(define acc2 (make-account 100))
+
+           ---------------------------------------------------------------------------------------------------------
+global --> | make-account: --------------------------------------------------------------------------------------  |
+env.       | acc2:------------------------------------------------                                              |  |<--
+           | acc: --                                             |                                              |  |  |
+           --------|---------------------------------------------|----------------------------------------------|---  |
+                   |          ^                                  |          ^                                   |     |
+                   |          |       --------------             |          |       --------------              |     |
+                   |          |       V            |             |          |       V            |              |     |
+                   |       ---------------         |             |       ---------------         |              V     |
+                   |  E1-->| balance: 30 |         |             |  E6-->| balance: 100|         |            (.)(.)---
+                   |       | withdraw----+---> (.)(.)            |       | withdraw----+---> (.)(.)            |
+                   |       | deposit-----+----  |                |       | deposit-----+----  |                V
+                   |-------+-dispatch    |   |  V                |-------+-dispatch    |   |  V                params: balance
+                   ||      ---------------   |  params: amount   ||      ---------------   |  params: amount   body: (define withdraw ...)
+                   ||       ^          ^     |  body: ...        ||       ^          ^     |  body: ...              (define deposit ...)
+                   ||       |          |     |                   ||       |          |     |                         (define dispatch ...)
+                   ||       |          |     |                   ||       |          |     |                         (dispatch)
+                   VV       |          |     |                   VV       |          |     |
+                 (.)(.)------        (.)(.)<--                 (.)(.)------        (.)(.)<--
+                  |                   |                         |                   |
+                  |                   V                         |                   V
+                  V                   params: amount            V                   params: amount
+                  params: m           body: ...                 params: m           body: ...
+                  body: ,,,                                     body: ,,,       
+
+The local states for the two accounts are stored in environments E1 and E6.  Depending on implementation, some of the code may be
+shared since withdraw, deposit and dispatch procedure bodies are identical.
