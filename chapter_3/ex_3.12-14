@@ -1,0 +1,140 @@
+*** Exercise 3.12:
+
+(define x (list 'a 'b))
+
+x--> [.|.]-->[.|/]
+      |       |
+      V       V
+     'a      'b
+
+(define y (list 'c 'd))
+
+y--> [.|.]-->[.|/]
+      |       |
+      V       V
+     'c      'd
+
+(define z (append x y))
+
+x--> [.|.]-->[.|/]   y--> [.|.]-->[.|/] 
+      |       |          ^ |       |
+      V       V          | V       V
+     'a      'b          |'c      'd
+                         |
+z--> [.|.]-->[.|.]--------
+      |       |
+      V       V
+     'a      'b
+
+z
+(a b c d)
+
+(cdr x)
+(b)
+
+(define w (append! x y))
+
+                     y
+                     |
+w-->                 V
+x--> [.|.]-->[.|.]-->[.|.]-->[.|/] 
+      |       |       |       |
+      V       V       V       V
+     'a      'b      'c      'd
+
+w
+(a b c d)
+
+(cdr x)
+(b c d)
+
+
+*** Exercise 3.13:
+
+     ------------------------
+     |                      |
+     V                      |
+z--> [.|.]-->[.|.]-->[.|.]---
+      |       |       |
+      V       V       V
+     'a      'b      'c
+
+(last-pair z) would create an infinite recursion.
+
+
+*** Exercise 3.14:
+
+(define v (list 'a 'b 'c 'd))
+
+v--> [.|.]-->[.|.]-->[.|.]-->[.|/] 
+      |       |       |       |
+      V       V       V       V
+     'a      'b      'c      'd
+
+(define w (mystery v))
+
+first call to loop:
+
+v--> [.|/]
+      |
+      V
+     'a
+
+temp--> [.|.]-->[.|.]-->[.|/] 
+         |       |       |
+         V       V       V
+        'b      'c      'd
+
+second call to loop:
+
+                v
+                |
+                V
+        [.|.]-->[.|/]
+         |       |
+         V       V
+        'b      'a
+   
+temp--> [.|.]-->[.|/] 
+         |       |
+         V       V
+        'c      'd
+
+third call to loop:
+
+                        v
+                        |
+                        V
+        [.|.]-->[.|.]-->[.|/]
+         |       |       |
+         V       V       V
+        'c      'b      'a
+   
+temp--> [.|/] 
+         |
+         V
+        'd
+
+fourth call to loop:
+
+                                v
+                                |
+                                V
+        [.|.]-->[.|.]-->[.|.]-->[.|/]
+         |       |       |       |
+         V       V       V       V
+        'd      'c      'b      'a
+   
+temp--> '()
+
+result:
+
+                                v
+                                |
+                                V
+   w--> [.|.]-->[.|.]-->[.|.]-->[.|/]
+         |       |       |       |
+         V       V       V       V
+        'd      'c      'b      'a
+
+Therefore, after evaluation v has the value ('a) and w ('d 'c 'b 'a).
