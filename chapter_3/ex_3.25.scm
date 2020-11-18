@@ -1,0 +1,62 @@
+#lang sicp
+
+(define (make-table same-key?)
+  (let ((local-table (list '*table*)))
+    (define (lookup . keys)
+      (define (helper keys element)
+        (cond ((null? keys)
+               (cdr element))
+              (else
+                (let ((subelement (assoc (car keys) (cdr element))))
+                  (if subelement
+                      (helper (cdr keys) subelement)
+                      #f)))))
+      (helper keys local-table))
+    (define (insert! value . keys)
+      (define (new-branch keys)
+        (cond ((null? (cdr keys))
+               (cons (car keys) value))
+              (else
+                (list (car keys) (new-branch (cdr keys))))))
+      (define (helper keys element)
+        (cond ((null? keys)
+               (set-cdr! element value))
+              (else
+                (let ((subelement (assoc (car keys) (cdr element))))
+                  (if subelement
+                      (helper (cdr keys) subelement)
+                      (set-cdr! element
+                                (cons (new-branch keys)
+                                      (cdr element))))))))
+      (helper keys local-table)
+      'ok)
+    (define (assoc key records)
+      (cond ((null? records) false)
+            ((same-key? key (caar records)) (car records))
+            (else (assoc key (cdr records)))))
+    (define (dispatch m)
+      (cond ((eq? m 'lookup-proc) lookup)
+            ((eq? m 'insert-proc!) insert!)
+            (else (error "Unknown operation -- TABLE" m))))
+    dispatch))
+
+(define table-1 (make-table equal?))
+(define get (table-1 'lookup-proc))
+(define put (table-1 'insert-proc!))
+
+;; TEST
+(display "Put animals birds peacock 1: ")
+(put 1 'animals 'birds 'peacock)
+(newline)
+(display "Put animals birds raven 2: ")
+(put 2 'animals 'birds 'raven)
+(newline)
+(display "Put animals marsupials kangaroo 3: ")
+(put 3 'animals 'marsupials 'kangaroo)
+(newline)
+(display "Put vegetables crucifers broccoli 4: ")
+(put 4 'vegetables 'crucifers 'broccoli)
+(newline)
+(display "Get animals marsupials kangaroo: ")
+(get 'animals 'marsupials 'kangaroo)
+(newline)

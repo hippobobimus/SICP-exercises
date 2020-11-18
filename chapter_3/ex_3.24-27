@@ -1,0 +1,135 @@
+*** Exercise 3.24:
+
+(define (make-table same-key?)
+  (let ((local-table (list '*table*)))
+    (define (lookup key-1 key-2)
+      (let ((subtable (assoc key-1 (cdr local-table))))
+        (if subtable
+            (let ((record (assoc key-2 (cdr subtable))))
+              (if record
+                  (cdr record)
+                  #f))
+            #f)))
+    (define (insert! key-1 key-2 value)
+      (let ((subtable (assoc key-1 (cdr local-table))))
+        (if subtable
+            (let ((record (assoc key-2 (cdr subtable))))
+              (if record
+                  (set-cdr! record value)
+                  (set-cdr! subtable
+                            (cons (cons key-2 value)
+                                  (cdr subtable)))))
+            (set-cdr! local-table
+                      (cons (list key-1
+                                  (cons key-2 value))
+                            (cdr local-table)))))
+      'ok)
+    (define (assoc key records)
+      (cond ((null? records) false)
+            ((same-key? key (caar records)) (car records))
+            (else (assoc key (cdr records)))))
+    (define (dispatch m)
+      (cond ((eq? m 'lookup-proc) lookup)
+            ((eq? m 'insert-proc!) insert!)
+            (else (error "Unknown operation -- TABLE" m))))
+    dispatch))
+
+(define table-1 (make-table equal?))
+(define get-1 (table-1 'lookup-proc))
+(define put-1 (table-1 'insert-proc!))
+
+Insert the required key equality procedure into the call to make table.  Here equal? is used to produce equivalent behaviour
+to the original definition.
+
+
+*** Exercise 3.25:
+
+#lang racket
+(require racket/trace)
+(require rnrs/mutable-pairs-6)
+(require compatibility/mlist)
+
+;; Tree and datum representations
+(define (make-tree datum left right)
+  (list datum left right))
+(define (datum tree) (car tree))
+(define (left-branch tree) (cadr tree))
+(define (right-branch tree) (caddr tree))
+
+(define (make-datum key data)
+  (mcons key data))
+(define (key datum) (mcar datum))
+(define (data datum) (mcdr datum))
+(define (set-data! datum value) (set-mcdr! datum value))
+
+;; Table constructor
+(define (make-table)
+  (let ((local-table (make-datum '*table* '())))
+    (define (lookup keys)
+      (define (helper keys current-datum)
+        (if (null? keys)
+            (data current-datum)
+            (let ((subdatum (assoc (car keys) (data current-datum))))
+              (if subdatum
+                  (helper (cdr keys) subdatum)
+                  #f))))
+      (helper keys local-table))
+
+    (define (insert! keys value)
+      (define (helper keys current-datum)
+        (if (null? keys)
+            (set-data! current-datum value)
+            (let ((subdatum (assoc (car keys) (data current-datum))))
+              (if subdatum
+                  (helper (cdr keys) subdatum)
+                  (begin
+                    (set-data! current-datum
+                               (adjoin-tree (make-datum (car keys) '())
+                                            (data current-datum)))
+                    (helper (cdr keys) (assoc (car keys) (data current-datum))))))))
+      (helper keys local-table)
+      'ok)
+
+    (define (adjoin-tree new-datum tree)
+      (cond ((null? tree) (make-tree new-datum '() '()))
+            ((symbol<? (key new-datum) (key (datum tree)))
+             (make-tree (datum tree)
+                        (adjoin-tree new-datum (left-branch tree))
+                        (right-branch tree)))
+            ((symbol<? (key (datum tree)) (key new-datum))
+             (make-tree (datum tree)
+                        (left-branch tree)
+                        (adjoin-tree new-datum (right-branch tree))))))
+
+    (define (assoc given-key tree)
+      (if (null? tree)
+          #f
+          (let ((d (datum tree)))
+            (cond ((equal? given-key (key d)) d)
+                  ((symbol<? given-key (key d))
+                   (assoc given-key (left-branch tree)))
+                  ((symbol<? (key d) given-key)
+                   (assoc given-key (right-branch tree)))))))
+
+    (define (print)
+      (display local-table)
+      (newline))
+
+    (define (dispatch m)
+      (cond ((eq? m 'lookup-proc) lookup)
+            ((eq? m 'insert-proc!) insert!)
+            ((eq? m 'print) print)
+            (else (error "Unknown operation -- TABLE" m))))
+    dispatch))
+
+(define operation-table (make-table))
+(define get (operation-table 'lookup-proc))
+(define put (operation-table 'insert-proc!))
+(define print-table (operation-table 'print))
+
+Could be extended with a periodic balancing procedure.
+
+
+*** Exercise 3.27:
+
+
