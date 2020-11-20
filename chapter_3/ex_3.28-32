@@ -1,0 +1,91 @@
+*** Exercise 3.28:
+
+(define (or-gate a1 a2 output)
+  (define (or-action-procedure)
+    (let ((new-value (logical-or (get-signal a1) (get-signal a2))))
+      (after-delay or-gate-delay
+                   (lambda ()
+                     (set-signal! output new-value)))))
+  (add-action! a1 or-action-procedure)
+  (add-action! a2 or-action-procedure)
+  'ok)
+
+
+*** Exercise 3.29:
+
+(define (or-gate a1 a2 output)
+  (define (or-action-procedure)
+    (let ((x (make-wire))
+          (y (make-wire))
+          (z (make-wire)))
+      (inverter a1 x)
+      (inverter a2 y)
+      (and-gate x y z)
+      (inverter z output)))
+  (add-action! a1 or-action-procedure)
+  (add-action! a2 or-action-procedure)
+  'ok)
+
+The total delay of the composite or-gate is at minimum:
+
+1 * and-gate-delay + 1 * inverter-delay
+
+And at maximum:
+
+1 * and-gate-delay + 2 * inverter-delay
+
+This is because when the or-gate is triggered by add-action, only one of a1 or a2 has changed value therefore only
+one of the initial inverters acts.  The and-gate then always acts but may or may not produce a changed output
+which determines whether the final inverter acts.
+
+As you do not know whether the final inverter acts the delay must be taken as the maximum value.
+
+
+*** Exercise 3.30:
+
+(define (ripple-carry-adder a-list b-list s-list c)
+  (let ((c-list (map (lambda (_) (make-wire))       ;; c-list is c1 to cn-1
+                     a-list)))
+    (let ((c-in-list (append c-list (make-wire)))
+          (c-out-list (cons c c-list)))
+      (map full-adder
+           a-list
+           b-list
+           c-in-list
+           s-list
+           c-out-list)
+      'ok)))
+
+The last bit of the result to be calculated will be s1 due to the propogation of the carry bit along the chain.
+
+Therefore the overall delay will be the delay of the last full adder receiving c1 plus the delay a single full
+adder incurs in producing s.
+
+First look at half-adders in general:
+
+ha-t-s = t-and + max(t-or, (t-and + t-inv))
+
+ha-t-c = t-and
+
+Now for full-adders:
+
+fa-t-s = 2.ha-t-s
+       = 2.(t-and + max(t-or, (t-and + t-inv)))
+
+fa-t-c = ha-t-s + ha-t-c + t-or
+       = 2.t-and + t-or + max(t-or, (t-and + t-inv))
+
+And naturally it follows that:
+
+t-c1 = (n - 1).fa-t-c
+     = (n - 1).(2.t-and + t-or + max(t-or, (t-and + t-inv)))
+
+t-s1 = t-c1 + fa-t-s
+     = (n - 1).(2.t-and + t-or + max(t-or, (t-and + t-inv)))
+       + 2.(t-and + max(t-or, (t-and + t-inv)))
+     = n.t-and + (n - 1).t-or + (n + 1).max(t-or, (t-and + t-inv))
+
+
+*** Exercise 3.31:
+
+

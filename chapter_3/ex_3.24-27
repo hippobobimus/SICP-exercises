@@ -132,4 +132,4 @@ Could be extended with a periodic balancing procedure.
 
 *** Exercise 3.27:
 
-
+The scheme would not work if memo-fib was defined to be (memoize fib) since fib recursively calls fib, not memo-fib as required.
