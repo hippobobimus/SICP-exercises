@@ -88,4 +88,38 @@ t-s1 = t-c1 + fa-t-s
 
 *** Exercise 3.31:
 
+When the-agenda is defined it is initially empty.  Items are only added to the agenda when the procedure after-delay is called,
+and this is only called when the primitive digital logic functions are called (e.g. inverter, and-gate, or-gate).  If we do not
+call the procedure within the body of accept-action-procedure! then upon initialising the half-adder, nothing is added to
+the-agenda and therefore there are no items for propogate gate to call.
 
+
+*** Exercise 3.32:
+
+Behaviour of and-gate when inputs change from 0,1 to 1,0:
+
+Assume that you have created three wires input1, input2 and out.  These are used to instantiate an and-gate;
+
+(and-gate input1 input2 out)
+
+The and-action-procedure inside the and-gate is called when either of the input wires changes value, and in doing so
+the procedure (lambda () (set-signal! output (logical-and (get-signal input1) (get-signal input2)))) is added to the
+agenda along with the appropriate time determined from the and-gate-delay.
+
+Therefore, if we follow an example of what happens when the inputs change from 0,1 to 1,0 we see the following:
+
+input1 = 0, input2 = 1
+input1 = 0 -> 1, input2 = 1
+
+(lambda () (set-signal! output 1) is added to the agenda)     --[ProcA]
+
+input1 = 1, input2 = 1 -> 0
+
+(lambda () (set-signal! output 0) is added to the agenda)     --[ProcB]
+
+If the segment uses a queue then ProcA is added first then ProcB.  Then when propogate calls procedures from the queue
+ProcA is called first followed by ProcB. So the output goes from 0 -> 1 -> 0 within the segment. At the end of the segment
+the inputs are 1,0 and the output is 0 which is correct.
+
+However if the segment uses a list to store procedures adding and removing only at the front then ProcB is called before ProcA.
+Thus the output goes from 0 -> 0 -> 1 and we end up with the wrong result.
