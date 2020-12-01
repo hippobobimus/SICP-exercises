@@ -1,0 +1,58 @@
+*** Exercise 3.46:
+
+Process A           Process B           Cell
+
+car cell->#f                            #f
+                    car cell->#f        #f
+set-car! cell #t                        #t
+return #f
+acquires mutex
+                    set-car! cell #t    #t
+                    return #f
+                    acquires mutex
+
+
+*** Exercise 3.47:
+
+(define (make-semaphore n)
+  (let ((lock (make-mutex))
+        (processes 0))
+    (define (acquire)
+      (lock 'acquire)
+      (if (< processes n)
+          (begin (set! processes (+ processes 1))
+                 (lock 'release))
+          (begin (lock 'release)
+                 (acquire))))
+    (define (release)
+      (lock 'acquire)
+      (set! processes (- processes 1))
+      (lock 'release))
+    (define (dispatch m)
+      (cond ((eq? m 'acquire) acquire)
+            ((eq? m 'release) release)
+            (else (error "Unknown request -- MAKE-SEMAPHORE" m))))
+    dispatch))
+
+
+(define (make-semaphore n)
+  (let ((cell (list #f))
+        (processes 0))
+    (define (acquire)
+      (if (test-and-set! cell)
+          (acquire)
+          (if (< processes n)
+              (begin (set! processes (+ processes 1))
+                     (clear! cell))
+              (begin (clear! cell)
+                     (acquire)))))
+    (define (release)
+      (if (test-and-set! cell)
+          (release)
+          (begin (set! processes (- processes 1))
+                 (clear! cell))))
+    (define (dispatch m)
+      (cond ((eq? m 'acquire) acquire)
+            ((eq? m 'release) release)
+            (else (error "Unknown request -- MAKE-SEMAPHORE" m))))
+    dispatch))

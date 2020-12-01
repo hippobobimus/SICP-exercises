@@ -1,0 +1,65 @@
+*** Exercise 3.38:
+
+(a)
+
+Possible sequential orders:
+
+Peter -> Paul  -> Mary  = 45
+Paul  -> Peter -> Mary  = 45
+Peter -> Mary  -> Paul  = 35
+Mary  -> Peter -> Paul  = 40
+Paul  -> Mary  -> Peter = 50
+Mary  -> Paul  -> Peter = 40
+
+So possible final balances are: 35, 40, 45 or 50.
+
+(b)
+
+If interleaved processes occur then the following are some possibilities:
+
+Peter                   Paul                    Mary
+
+Access balance: 100      
+New value: 110
+                        Access balance: 100
+                        New value: 80
+                        Set balance: 80
+                                                Access balance: 80
+                                                Temp-value: 40
+                                                New-value: 80-40=40
+                                                Set balance: 40
+Set balance: 110
+
+Final result 110.
+
+
+Peter                   Paul                    Mary
+
+Access balance: 100      
+New value: 100+10=110
+                        Access balance: 100
+                        New value: 100-20=80
+                        Set balance: 80
+                                                Access balance: 80
+                                                Temp-value: 80/2=40
+Set balance: 110
+                                                New-value: 110-40=70
+                                                Set balance: 70
+
+Final result 70.
+
+
+Peter                   Paul                    Mary
+
+Access balance: 100      
+New value: 100+10=110
+                        Access balance: 100
+                        New value: 100-20=80
+Set balance: 110
+                                                Access balance: 110
+                                                Temp-value: 110/2=55
+                        Set balance: 80
+                                                New-value: 80-55=25
+                                                Set balance: 25
+
+Final result 25.

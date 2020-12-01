@@ -1,0 +1,51 @@
+*** Exercise 3.39:
+
+Computed sequentially:
+
+101
+121
+
+Compute protected part of P1 then P2 then the set from P1:
+
+100
+
+Compute protected part of P1, then compute P2 up to be excluding the set!, then the set! from P1 followed by the set from P2:
+
+11
+
+
+*** Exercise 3.40:
+
+P1->P2                                          1,000,000
+P2->P1                                          1,000,000
+P1body->P2-P1set                                100
+P2body->P1->P2set                               1000
+P1set interrupts after 1st x in P2's (* x x x)  10*100*100=100,000
+P1set interrupts after 2nd x in P2's (* x x x)  10*10*100=10,000
+P2set interrupts after 1st x in P1's (* x x)    10*1000=10,000
+
+Therefore, possible values:
+
+1,000,000
+100,000
+10,000
+1000
+100
+
+
+*** Exercise 3.41:
+
+In general, by the definition given for 'correct' results then access to balance does not need to be serialized.
+The results will be equivalent to that achieved in some sequential order.
+
+However in a practical sense you could have undesirable behaviour.  For example;
+
+(withdraw (/ balance 2)) and (withdraw 60) executed on an account with an initial balance of 100 in parallel
+might produce a situation where you calculate half the balance, withdraw 60 and then are unable to withdraw 
+what you thought was half the balance (50).
+
+
+*** Exercise 3.42:
+
+This appears to be a safe change to make because the difference in when these functions are serialized does
+not change the fact that they are serialized when evaluated.  Both versions achieve the same ends.

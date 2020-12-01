@@ -1,0 +1,124 @@
+*** Exercise 3.53:
+
+(define s (cons-stream 1 (add-streams s s)))
+
+  1 2 4 8
+  1 2 4 8
+  --------
+1 2 4 8 16 ...
+
+It produces a stream of powers of 2.
+
+
+*** Exercise 3.54:
+
+(define factorials (cons-stream 1 (mul-streams (stream-cdr integers) factorials)))
+
+
+*** Exercise 3.55:
+
+(define (partial-sums s)
+  (cons-stream (stream-car s)
+               (add-streams (partial-sums s)
+                            (stream-cdr s))))
+
+Better:
+
+(define (partial-sums s)
+  (add-streams s (cons-stream 0 (partial-sums s))))
+
+previous call to add-streams was in the cons-stream cdr position so would be delayed/memoized.
+
+*** Exercise 3.56:
+
+(define S (cons-stream 1 (merge (scale-stream S 2)
+                                (merge (scale-stream S 3)
+                                       (scale-stream S 5)))))
+
+
+*** Exercise 3.57:
+
+(define fibs
+  (cons-stream 0
+               (cons-stream 1
+                            (add-streams (stream-cdr fibs)
+                                         fibs))))
+
+F0 and F1 require 0 additions since they are simply provided in the definition of fibs.
+
+F2 requires the addtion of F0 and F1, so 1 addition.
+
+F3 requires the addition of F2 and F1 - since F2 and F1 have already been memoized, this again
+means only 1 addition.
+
+As we can see, due to memoization, each term only requires 1 additional addition hence
+Fn requires (n-1) additions.
+
+Without memoization, calculating Fn requires also the full calculation of Fn-1 and Fn-2.  Therefore the 
+number of additions required is proportional to the Fibonacci sequence itself.
+
+Specifically, after the first two provided terms which require 0 additions, each term requires the sum 
+of the additions to calculate the previous two terms plus 1.  i.e. calculating the two previous terms
+and then adding them together.
+
+Term:      F0 F1 F2 F3 F4 F5 F6 F7 ...
+Additions:  0  0  1  2  4  7 12 20 ...
+Fib(n):     0  1  1  2  3  5  8 13 ...
+Fib(n+1):   1  1  2  3  5  8 13 21 ...
+
+Fn requires Fn+1 - 1 additions.
+
+
+*** Exercise 3.58:
+
+(expand 1 7 10) --> (1 4 2 8 5 7 1 4 2 8 5 7 ...)
+
+(expand 3 8 10) --> (3 7 5 0 0 0 0 0 ...)
+
+The stream represents the digits in the significand of num/den with base 10.
+
+
+*** Exercise 3.59:
+
+(a)
+
+(define (integrate-series s)
+  (stream-map *
+              (stream-map / ones integers)
+              s))
+
+(b)
+
+(define cosine-series
+  (cons-stream 1 (integrate-series (stream-map - sine-series))))
+
+(define sine-series
+  (cons-stream 0 (integrate-series cosine-series)))
+
+
+*** Exercise 3.60:
+
+(define (mul-series s1 s2)
+  (cons-stream (* (stream-car s1) (stream-car s2))
+               (add-streams (scale-stream (stream-cdr s2) (stream-car s1))
+                            (mul-series (stream-cdr s1) s2))))
+
+
+*** Exercise 3.61:
+
+(define (invert-unit-series s)
+  (cons-stream 1 (mul-series (stream-map - (stream-cdr s))
+                             (invert-unit-series s))))
+
+
+*** Exercise 3.62:
+
+(define (div-series numer denom)
+  (if (= (stream-car denom) 0)
+      (error "Denominator series must begins with a non-zero constant term -- DIV-SERIES"
+             denom)
+      (mul-series numer
+                  (invert-unit-series denom))))
+
+(define tangent-series
+  (div-series sine-series cosine-series))

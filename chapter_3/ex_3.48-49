@@ -1,0 +1,55 @@
+*** Exercise 3.48:
+
+When each process attempts to acquire the smaller numbered account first this will ensure
+that deadlock can be avoided since transfer attempts that share accounts will always attempt to
+acquire the same account first and only one will succeed.  The successful process is then free to acquire
+the other account and complete, at which point the other process can acquire the accounts and complete.
+
+acc1 id = 1
+acc2 id = 2
+
+(transfer acc1 acc2) and (transfer acc2 acc1)
+-> both processes attempt to acquire acc1 first
+-> one is successful
+-> succesful process then acquires acc2 and completes
+-> other process acquires the accounts and completes
+
+(define (make-account-and-serializer balance id)
+  (define (withdraw amount)
+    (if (>= balance amount)
+        (begin (set! balance (- balance amount))
+               balance)
+        "Insufficient funds"))
+  (define (deposit amount)
+    (set! balance (+ balance amount))
+    balance)
+  (let ((balance-serializer (make-serializer)))
+    (define (dispatch m)
+      (cond ((eq? m 'withdraw) withdraw)
+            ((eq? m 'deposit) deposit)
+            ((eq? m 'balance) balance)
+            ((eq? m 'id) id)
+            ((eq? m 'serializer) balance-serializer)
+            (else (error "Unknown request -- MAKE-ACCOUNT"
+                         m))))
+    dispatch))
+
+(define (serialized-exchange account1 account2)
+  (let ((serializer1 (account1 'serializer))
+        (serializer2 (account2 'serializer)))
+    (if (< (account1 'id) (account2 'id))
+        ((serializer1 (serializer2 exchange))
+         account1
+         account2)
+        ((serializer2 (serializer1 exchange))
+         account1
+         account2))))
+
+
+*** Exercise 3.49:
+
+An imagined scenario where the previous methodology would not work for deadlock avoidance would be a shell account.
+
+Suppose acc1 is a shell account for acc2 and vice versa.  Trying to withdraw from acc1 you acquire acc1
+and try to then acquire acc2, however at the same time someone tries to withdraw from acc2, acquires acc2
+and proceeds to attempt to acquire acc1.  This produces deadlock.

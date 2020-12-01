@@ -1,0 +1,95 @@
+*** Exercise 3.50:
+
+(define (stream-map proc . argstreams)
+  (if (stream-null? (car argstreams))
+      the-empty-stream
+      (cons-stream
+       (apply proc (map stream-car argstreams))
+       (apply stream-map
+              (cons proc (map stream-cdr argstreams))))))
+
+
+*** Exercise 3.51:
+
+
+(define x (stream-map show (stream-enumerate-interval 0 10)))
+
+0
+
+(stream-ref x 5)
+
+1
+2
+3
+4
+5
+5
+
+(stream-ref x 7)
+
+6
+7
+7
+
+
+*** Exercise 3.52:
+
+(define sum 0)
+
+sum --> 0
+
+(define (accum x)
+  (set! sum (+ x sum))
+  sum)
+
+(define seq (stream-map accum (stream-enumerate-interval 1 20)))
+
+sum --> 1
+
+(define y (stream-filter even? seq))
+
+sum --> 3 --> 6
+
+(define z (stream-filter (lambda (x) (= (remainder x 5) 0))
+                         seq))
+
+sum --> 10
+
+(stream-ref y 7)
+
+sum --> 15 --> 21 --> 28 --> 36 --> 45 --> 55 --> 66 --> 78 --> 91 --> 105 --> 120 --> 136
+
+printed response: 136
+
+(display-stream z)
+
+sum --> 153 --> 171 --> 190 --> 210
+
+printed response:
+10
+15
+45
+55
+105
+120
+190
+210
+
+
+If memoization had not been used when implementing delay then the results would be significantly different.
+For example, when seq is defined it becomes (1 (delay ...)) and sum becomes 1.  Then when y is defined the next two elements
+in the stream are forced producing 3 then 6.  And at the same time sum is set to 3 and then 6.
+
+Subsequently, z is defined and it acts on seq which is (1 (delay ...)).  In the memoized version, when it forces subsequent
+elements in the stream it again produces 3 and then 6 but does not set sum since we are calling the same process again and
+are just returned the stored result from the initial evaluation.
+
+However, without memoization, the second element would be evaluated as:
+
+(set! sum (+ x sum))
+sum
+
+But sum is 6 so this sets sum to 8 and returns 8 for the second element of seq, not 3 as before.
+
+This effect continues to have ramifications down through the various elements as whenever the value of sum is set it changes
+the result of future forcing/evaluations of seq.

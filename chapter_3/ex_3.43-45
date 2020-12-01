@@ -1,0 +1,62 @@
+*** Exercise 3.43:
+
+If we assume the processes are run sequentially then an exchange process cannot be interrupted or
+affected by any other exchange process.  Since the exchange process simply exchanges the balances of
+two accounts then it is natural to conclude that the final result of any number of exchanges will be
+the original balances in some order.
+
+However, if the first version of account-exchange is used then this condition can be violated.
+
+For example, suppose Peter attempts to exchange accounts 1 and 2 while Paul exchanges accounts 2 and 3:
+
+Peter                       Paul                        acc1    acc2    acc3
+
+                                                          30      20      10
+balance acc1 - acc2 = 10    
+                            balance acc2 - acc3 = 10
+                            acc2 withdraw 10                      10
+                            acc3 deposit 10                               20
+                            
+acc1 withdraw 10                                          20
+acc2 deposit 10                                                   20
+
+So the final value in each account is 20 and balances have not been correctly exchanged.
+
+The individual withdrawals and deposits are serialized however.  Since in the exchange procedure a withdrawal
+is always paired with a deposit of the same value then the total balance across accounts is always conserved.
+
+If, on the other hand, the individual withdrawal and deposit transactions are not serialized then this condition
+is also violated.
+
+For example:
+
+Peter                       Paul                        acc1    acc2    acc3
+
+                                                          30      20      10
+balance acc1 - acc2 = 10    
+acc1 withdraw 10                                          20
+                            balance acc2 - acc3 = 10
+acc2 deposit 10...          acc2 withdraw 10...
+  balance 20
+  new-value 20+10=30
+                              balance 20
+                              new-value 20-10=10
+                              set acc2 balance 10                 10
+  set acc2 balance 30                                             30
+                            acc3 deposit 10                               20
+                            
+Thus we end up with 20, 30, 20 in the accounts and a total 10 greater than the original sum.
+
+
+*** Exercise 3.44:
+
+Louis is wrong.  The exchange procedure has an unserialized calculation using the balances of two accounts which is then
+used as the argument for withdraw and deposit whilst this is not the case in transfer.  Transfer simply performs two serialized
+processes with a fixed amount given to it as an argument.
+
+
+*** Exercise 3.45:
+
+Louis' methodology would result in the withdrawal and deposit procedures in serialized-exchange being wrapped twice
+by the same serializer thus rendering them unable to evaluate under any circumstances; since by definition processes
+wrapped by the same serializer cannot run concurrently.
