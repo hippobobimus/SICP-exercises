@@ -1,0 +1,158 @@
+*** Exercise 3.66:
+
+The general formula is:
+
+{ 2.(j - i) + 1 }.2^c - 2
+
+when i=j: c = i
+     i<j: c = i - 1
+
+Therefore;
+
+(  1,100): 197
+( 99,100): 3.2^98 - 2
+(100,100): 2^100 - 2
+
+*** Exercise 3.67:
+
+(define (pairs s t)
+  (cons-stream
+    (list (stream-car s) (stream-car t))
+    (interleave
+      (interleave
+        (stream-map (lambda (x) (list (stream-car s) x))
+                    (stream-cdr t))
+        (stream-map (lambda (x) (list x (stream-car t)))
+                    (stream-cdr s)))
+      (pairs (stream-cdr s) (stream-cdr t)))))
+
+
+*** Exercise 3.68:
+
+Louis' procedure definition includes a recursion prior to any delay, therefore the procedure will recurse infinitely
+without returning.
+
+Though interleave does use cons-stream and thereby introduces a delay, the procedure will never get that far.  Due to
+applicative-order evaluation, interleave's arguments will be evaluated first and its second argument is the recursive
+call to pairs.
+
+
+*** Exercise 3.69:
+
+(define (triples s t u)
+  (cons-stream
+    (list (stream-car s) (stream-car t) (stream-car u))
+    (interleave
+      (stream-map (lambda (x) (cons (stream-car s) x))
+                  (stream-cdr (pairs t u)))
+      (triples (stream-cdr s) (stream-cdr t) (stream-cdr u)))))
+
+(define (pythagorean-triples s)
+  (stream-filter (lambda (triple)
+                   (= (+ (square (car triple))
+                         (square (cadr triple)))
+                      (square (caddr triple))))
+                 (triples s s s)))
+
+
+*** Exercise 3.70:
+
+(define (merge-weighted s1 s2 weight)
+  (cond ((stream-null? s1) s2)
+        ((stream-null? s2) s1)
+        (else
+          (let ((s1car (stream-car s1))
+                (s2car (stream-car s2)))
+            (cond ((< (weight s1car) (weight s2car))
+                   (cons-stream s1car (merge-weighted (stream-cdr s1) s2 weight)))
+                  ((> (weight s1car) (weight s2car))
+                   (cons-stream s2car (merge-weighted s1 (stream-cdr s2) weight)))
+                  (else
+                    (cons-stream s1car
+                                 (cons-stream s2car
+                                              (merge-weighted (stream-cdr s1)
+                                                              (stream-cdr s2)
+                                                              weight)))))))))
+
+(define (weighted-pairs s t weighting-func)
+  (cons-stream
+    (list (stream-car s) (stream-car t))
+    (merge-weighted
+      (stream-map (lambda (x) (list (stream-car s) x))
+                  (stream-cdr t))
+      (weighted-pairs (stream-cdr s) (stream-cdr t) weighting-func)
+      weighting-func)))
+
+(a)
+
+(define stream-a (weighted-pairs integers
+                                 integers
+                                 (lambda (pair)
+                                   (+ (car pair)
+                                      (cadr pair)))))
+
+(b)
+
+(define temp-b (weighted-pairs integers
+                               integers
+                               (lambda (pair)
+                                 (+ (* 2 (car pair))
+                                    (* 3 (cadr pair))
+                                    (* 5 (car pair) (cadr pair))))))
+
+(define stream-b (stream-filter (lambda (pair)
+                                  (let ((i (car pair))
+                                        (j (cadr pair)))
+                                    (not (or (= (remainder i 2) 0)
+                                             (= (remainder j 2) 0)
+                                             (= (remainder i 3) 0)
+                                             (= (remainder j 3) 0)
+                                             (= (remainder i 5) 0)
+                                             (= (remainder j 5) 0)))))
+                                temp-b))
+
+
+*** Exercise 3.71:
+
+(define (r-weight pair)
+  (+ (expt (car pair) 3)
+     (expt (cadr pair) 3)))
+
+(define (get-ramanujan-numbers stream)
+  (let ((s0 (stream-car stream))
+        (s1 (stream-car (stream-cdr stream))))
+    (let ((w0 (r-weight s0))
+          (w1 (r-weight s1)))
+      (if (= w0 w1)
+          (cons-stream (list w0 s0 s1)
+                       (get-ramanujan-numbers (stream-cdr (stream-cdr stream))))
+          (get-ramanujan-numbers (stream-cdr stream))))))
+
+(define ramanujan-numbers
+  (get-ramanujan-numbers
+    (weighted-pairs integers
+                    integers
+                    r-weight)))
+
+
+*** Exercise 3.72:
+
+(define (triple-stream stream)
+  (let ((s0 (stream-ref stream 0))
+        (s1 (stream-ref stream 1))
+        (s2 (stream-ref stream 2)))
+    (cons-stream (list s0 s1 s2)
+                 (triple-stream (stream-cdr stream)))))
+
+(define (sum-of-squares pair)
+  (+ (expt (car pair) 2) (expt (cadr pair) 2)))
+
+(define sum-of-two-squares-in-3-ways
+  (stream-map (lambda (x)
+                (cons (sum-of-squares (car x)) x))
+              (stream-filter (lambda (x)
+                               (= (sum-of-squares (car x)) 
+                                  (sum-of-squares (cadr x))
+                                  (sum-of-squares (caddr x))))
+                             (triple-stream
+                               (weighted-pairs integers integers sum-of-squares)))))

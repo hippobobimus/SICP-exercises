@@ -11,6 +11,17 @@
   (newline)
   (display x))
 
+(define (display-stream-head-n stream number-of-elements)
+  (define (iter s n)
+    (cond ((= n 0) (display ",,, )"))
+          (else
+            (display (stream-car s))
+            (display " ")
+            (iter (stream-cdr s) (- n 1)))))
+  (display "(")
+  (iter stream number-of-elements)
+  (newline))
+
 (define (display-stream-head s)
   (define (iter stream n)
     (cond ((= n 0) (display ",,, )"))
@@ -19,7 +30,7 @@
             (display " ")
             (iter (stream-cdr stream) (- n 1)))))
   (display "(")
-  (iter s 20)
+  (iter s 30)
   (newline))
 
 (define (stream-ref s n)
@@ -61,3 +72,15 @@
 
 (define (scale-stream stream factor)
   (stream-map (lambda (x) (* x factor)) stream))
+
+(define (partial-sums s)
+  (cons-stream (stream-car s)
+               (add-streams (partial-sums s)
+                            (stream-cdr s))))
+
+(define (interleave s1 s2)
+  (if (stream-null? s1)
+      s2
+      (cons-stream (stream-car s1)
+                   (interleave s2 (stream-cdr s1)))))
+
